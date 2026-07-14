@@ -10,6 +10,12 @@ Feedback on the [design doc](./docs/design-doc.md) — open a **Design feedback*
 
 Use the **Bug report** or **Feature request** issue templates. For anything security-sensitive, see [SECURITY.md](./SECURITY.md) instead of opening a public issue.
 
+## Branching model
+
+- `dev` is the default branch and where all day-to-day work lands. Branch off `dev`, and open feature/fix/docs/chore PRs back into `dev`.
+- `main` only ever moves via a **release PR from `dev`** — merging into `main` is what (once CI/CD exists) triggers artifact/version publishing for the Android and iOS libraries. Don't target `main` directly with a feature branch.
+- Both `dev` and `main` are protected on GitHub: no direct pushes (PRs only, enforced for admins too), no force-pushes, no branch deletion.
+
 ## Branch naming
 
 Prefix branches with the [Conventional Commits](https://www.conventionalcommits.org/) type they represent:
@@ -43,6 +49,16 @@ Scope is optional but encouraged when the change is localized to one module (`co
 - One logical change per PR — matches one milestone or a clearly scoped slice of one.
 - Fill in the PR template completely, including the non-negotiable-principles checklist ([design doc §2](./docs/design-doc.md#2-design-principles-non-negotiable)).
 - `:sample-app-*` must only consume published artifacts, never get privileged access to `:core`/`:ui-*` — a PR that breaks this isolation will be asked to change, regardless of what it's trying to demonstrate.
+
+There are two PR templates in [`.github/PULL_REQUEST_TEMPLATE/`](./.github/PULL_REQUEST_TEMPLATE):
+
+- **`feature.md`** — default for anything targeting `dev` (feature/fix/docs/chore/etc.). GitHub should offer a template chooser when opening the PR; if it doesn't show up, open the PR with `?template=feature.md` appended to the compare URL.
+- **`release.md`** — only for the `dev` → `main` release PR. Open it with `?template=release.md` appended to the compare URL (`.../compare/main...dev?template=release.md&quick_pull=1`).
+
+### Merge method
+
+- Feature/fix/docs/chore PRs into `dev`: **squash merge** — keep one clean, Conventional-Commits-titled commit per PR.
+- The `dev` → `main` release PR: **merge commit** (not squash) — `main` should retain the individual feature commits from `dev`, not collapse a whole release into one commit.
 
 ## Code of conduct
 

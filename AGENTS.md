@@ -49,6 +49,10 @@ Integrator's BFF — out of scope; owns LLM choice, context, handoff routing, ac
 - Branches: prefixed to match commit type (`feat/`, `fix/`, `docs/`, `chore/`, `refactor/`, `test/`, `build/`, `ci/`).
 - Code and docs are written in English; project discussion with the maintainer may happen in Portuguese.
 
+## Branching model
+
+`dev` is the default/integration branch — branch off it, PR back into it (squash merge). `main` only moves via a release PR from `dev` (merge commit, not squash) and is what will trigger CI/CD artifact/version publishing once that exists. Both branches are protected on GitHub: no direct pushes, not even for admins. See [CONTRIBUTING.md](./CONTRIBUTING.md) for the full workflow.
+
 ## Current status
 
 Design phase is complete (design doc v0.1). Implementation has not started yet — no `:core`/`:ui-*` modules exist in the repo yet. Roadmap order: M0 SSE transport → M1 session/context → M2 native text UI → M3 media → M4 cards → M5 telemetry → M6 WebSocket handoff → M7 sample apps. Check `README.md#roadmap` and recent commits/issues before assuming any milestone is further along than it is.
