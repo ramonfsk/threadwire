@@ -57,7 +57,7 @@ Threadwire doesn't compete with Stream/Sendbird/CometChat on messaging infrastru
 
 ## Status
 
-**This project is in early implementation.** The design doc is final for v0.1; the mono-repo has a Kotlin Multiplatform toolchain smoke test (`:core` + `:sample-app-android` + `sample-app-ios`) but no SDK functionality yet.
+**This project is in early implementation.** The design doc is final for v0.1. M0 (SSE transport + event protocol parsing) is implemented in `:core` — see [roadmap](#roadmap) for what's next.
 
 The full architecture — wire protocol, transport design, threat model for the action/telemetry boundaries, and module structure — is written up in [`docs/design-doc.md`](./docs/design-doc.md). Feedback and discussion on the design are very welcome via issues.
 
@@ -71,10 +71,13 @@ This is a Kotlin Multiplatform project targeting Android and iOS.
 
 `:ui-android` and `:ui-ios` (the actual reusable chat UI modules) don't exist yet — see the [roadmap](#roadmap).
 
+- [`tools/fake-sse-server`](./tools/fake-sse-server) — a small local Ktor server for manually exercising `SseChatTransport` against a real HTTP connection (scripted event sequence, deliberate mid-stream drop to test `Last-Event-ID` reconnection). Not shipped with `:core`, dev-only.
+
 ### Running the apps
 
 - Android app: `./gradlew :sample-app-android:assembleDebug`
 - iOS app: open [`sample-app-ios`](./sample-app-ios) in Xcode and run it from there.
+- Fake SSE server (manual transport testing): `./gradlew :tools:fake-sse-server:run`, then `curl -N -H "Accept: text/event-stream" -X POST http://localhost:8080/chat`
 
 ### Running tests
 
@@ -133,7 +136,7 @@ Full breakdown in the [design doc](./docs/design-doc.md).
 
 ## Roadmap
 
-- **M0** — SSE transport + event protocol
+- **M0** — SSE transport + event protocol ✅ implemented (pending maintainer review/validation)
 - **M1** — Session state machine + context injection
 - **M2** — Native text UI + streaming markdown
 - **M3** — File upload + audio record/playback
