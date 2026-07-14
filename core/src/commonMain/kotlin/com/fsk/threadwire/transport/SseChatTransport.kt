@@ -20,11 +20,13 @@ import kotlinx.coroutines.flow.flow
  * frame's own `id` field; that is the entire reconnection mechanism (no custom
  * seq/resume handshake here - that's WebSocket-only, M6, per design doc §6.1).
  *
- * NOTE: the exact `HttpClient.sse(...)` call shape below (in particular, driving a POST
- * request through it and reading `HttpMethod`/body from the request builder) should be
- * double-checked against the actual Ktor version pinned in the version catalog once
- * dependencies resolve - written against the general SSE client plugin API, not
- * verified against a specific Ktor release.
+ * The SSE client plugin (`io.ktor.client.plugins.sse`) ships inside `ktor-client-core`
+ * itself - there is no separate `ktor-client-sse` artifact, confirmed against Ktor's own
+ * docs (https://ktor.io/docs/client-server-sent-events.html). It also has its own
+ * built-in reconnection (`maxReconnectionAttempts`/`reconnectionTime` on `install(SSE)`),
+ * but that isn't used here: it can't resend a per-attempt `Last-Event-ID` header, so this
+ * class opens a brand new `sse(...)` call per retry instead, with the header set from the
+ * last-seen event id.
  */
 class SseChatTransport(
     private val httpClient: HttpClient,
