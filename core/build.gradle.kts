@@ -44,13 +44,22 @@ kotlin {
         commonTest.dependencies {
             implementation(libs.kotlin.test)
             implementation(libs.kotlinx.coroutines.test)
-            implementation(libs.ktor.client.mock)
         }
         androidMain.dependencies {
             implementation(libs.ktor.client.okhttp)
         }
         iosMain.dependencies {
             implementation(libs.ktor.client.darwin)
+        }
+        // No typed `androidHostTest` accessor is generated for this source set (unlike
+        // commonMain/commonTest/androidMain/iosMain above), so it's looked up by name.
+        getByName("androidHostTest").dependencies {
+            // JVM-only: real embedded server for SseChatTransport tests. MockEngine
+            // can't produce a proper SSESession (that adaptation is implemented by each
+            // concrete client engine, not by MockEngine), so this exercises the real
+            // protocol path over loopback instead - see SseChatTransportTest's KDoc.
+            implementation(libs.ktor.server.core)
+            implementation(libs.ktor.server.cio)
         }
     }
 }

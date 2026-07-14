@@ -37,9 +37,9 @@ Integrator's BFF — out of scope; owns LLM choice, context, handoff routing, ac
 
 ```
 :core             pure KMP, no UI — transport, context, state machine, card schema, telemetry
-                  (exists: protocol/ + transport/ packages implement M0 - SSE transport
-                  and event protocol parsing. ChatSession/ChatContextProvider/ChatConfig
-                  (M1), cards (M4), telemetry (M5), WebSocket handoff (M6) not built yet)
+                  (exists: protocol/ (M0, event parsing), transport/ (M0, SSE transport),
+                  session/ (M1, ChatSession/ChatContextProvider/ChatConfig/ChatState).
+                  Cards (M4), telemetry (M5), WebSocket handoff (M6) not built yet)
 :ui-android       Jetpack Compose, consumes :core (not created yet)
 :ui-ios           SwiftUI (via SPM), consumes :core (not created yet)
 :sample-app-android / sample-app-ios
@@ -54,7 +54,7 @@ Integrator's BFF — out of scope; owns LLM choice, context, handoff routing, ac
 
 The iOS host app builds `:core` as a framework named `ThreadwireCore` (`import ThreadwireCore` in Swift), embedded via an Xcode Run Script phase that calls `./gradlew :core:embedAndSignAppleFrameworkForXcode`.
 
-`:core`'s transport/protocol layer (`com.fsk.threadwire.protocol.ChatEvent`/`ChatEventParser`, `com.fsk.threadwire.transport.ChatTransport`/`SseChatTransport`) is deliberately decoupled from `ChatSession`/`ChatContextProvider`/`ChatConfig` (M1, not built yet) - `ChatTransport.streamEvents` takes a plain `ChatRequest` (url/headers/body), so M1 can wire in the not-yet-built session/context layer without this contract changing. ID-based reconciliation of repeated-id parts (folding several `card-update`s into one logical card, etc.) is intentionally NOT implemented here - that's M1's job.
+`:core`'s transport/protocol layer (`com.fsk.threadwire.protocol.ChatEvent`/`ChatEventParser`, `com.fsk.threadwire.transport.ChatTransport`/`SseChatTransport`) stays decoupled from the session layer - `ChatTransport.streamEvents` takes a `TransportRequest` (url/headers/body, renamed from `ChatRequest` in M1 to avoid colliding with the new session-level type below). `com.fsk.threadwire.session` (M1) adds: `ChatRequest` (minimal, pre-headers/context view handed to `ChatContextProvider` - not the same type as `TransportRequest`), `ChatContextProvider`/`ChatConfig` (design doc §7 - `ChatConfig` intentionally omits `actionHandler`/`telemetrySink` until M4/M5 exist), `ChatState`/`ChatMessage`/`MessagePart`/`SessionPhase` (the state machine's data shape - not specified in the design doc beyond "`StateFlow<ChatState>`", designed from scratch), `ChatStateReducer` (pure fold, ID-reconciliation of repeated parts lives here), and `ChatSession` (ties it together, one turn per `sendMessage(text: String)` call). `ChatSession` depends on the `ChatTransport` interface, never `SseChatTransport` directly, so M6 can later substitute a phase-aware SSE/WebSocket router without a breaking change. `SessionPhase` already models the full handoff cycle (`AiActive`/`HandoffPending`/`HandoffActive`) reacting to M0's already-parsed handoff events, but the transport underneath stays SSE-only until M6 actually builds WebSocket support.
 
 ## Conventions
 
@@ -68,7 +68,7 @@ The iOS host app builds `:core` as a framework named `ThreadwireCore` (`import T
 
 ## Current status
 
-Design phase is complete (design doc v0.1). M0 (SSE transport + event protocol parsing) is implemented in `:core` (see Module layout above) - pending the maintainer's own build/manual validation before merge. Roadmap order: M0 SSE transport → M1 session/context → M2 native text UI → M3 media → M4 cards → M5 telemetry → M6 WebSocket handoff → M7 sample apps. Check `README.md#roadmap` and recent commits/issues before assuming any milestone is further along than it is.
+Design phase is complete (design doc v0.1). M0 (SSE transport + event protocol parsing) and M1 (session state machine, `ChatContextProvider`, `ChatConfig`) are implemented in `:core` (see Module layout above) - pending the maintainer's own build/manual validation before merge. Roadmap order: M0 SSE transport → M1 session/context → M2 native text UI → M3 media → M4 cards → M5 telemetry → M6 WebSocket handoff → M7 sample apps. Check `README.md#roadmap` and recent commits/issues before assuming any milestone is further along than it is.
 
 ## Before implementing something with an open design gap
 
