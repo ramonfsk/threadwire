@@ -33,7 +33,7 @@ class SseChatTransport(
     private val reconnectPolicy: ReconnectPolicy = ReconnectPolicy(),
 ) : ChatTransport {
 
-    override fun streamEvents(request: ChatRequest): Flow<ChatEvent> = flow {
+    override fun streamEvents(request: TransportRequest): Flow<ChatEvent> = flow {
         var lastEventId: String? = null
         var attempt = 0
         var finished = false

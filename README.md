@@ -57,7 +57,7 @@ Threadwire doesn't compete with Stream/Sendbird/CometChat on messaging infrastru
 
 ## Status
 
-**This project is in early implementation.** The design doc is final for v0.1. M0 (SSE transport + event protocol parsing) is implemented in `:core` — see [roadmap](#roadmap) for what's next.
+**This project is in early implementation.** The design doc is final for v0.1. M0 (SSE transport + event protocol parsing) and M1 (session state machine + context injection) are implemented in `:core` — see [roadmap](#roadmap) for what's next.
 
 The full architecture — wire protocol, transport design, threat model for the action/telemetry boundaries, and module structure — is written up in [`docs/design-doc.md`](./docs/design-doc.md). Feedback and discussion on the design are very welcome via issues.
 
@@ -136,8 +136,8 @@ Full breakdown in the [design doc](./docs/design-doc.md).
 
 ## Roadmap
 
-- **M0** — SSE transport + event protocol ✅ implemented (pending maintainer review/validation)
-- **M1** — Session state machine + context injection
+- **M0** — SSE transport + event protocol ✅ merged
+- **M1** — Session state machine + context injection ✅ implemented (pending maintainer review/validation)
 - **M2** — Native text UI + streaming markdown
 - **M3** — File upload + audio record/playback
 - **M4** — Dynamic cards + action handler

@@ -4,15 +4,17 @@ import com.fsk.threadwire.protocol.ChatEvent
 import kotlinx.coroutines.flow.Flow
 
 /**
- * A single request to open a streamed chat turn against the integrator's BFF. [body] is
- * an opaque, already-serialized payload (design doc §2 principle 6) - this layer never
- * parses or interprets business content, it only transports it.
+ * A single, fully-assembled request to open a streamed chat turn against the
+ * integrator's BFF. [body] is an opaque, already-serialized payload (design doc §2
+ * principle 6) - this layer never parses or interprets business content, it only
+ * transports it.
  *
- * Deliberately has no dependency on `ChatConfig`/`ChatContextProvider` (M1, not built
- * yet) - those will be responsible for constructing a [ChatRequest] later, so this
- * contract doesn't need to change when M1 lands.
+ * Named `TransportRequest` (not `ChatRequest`) to avoid colliding with the
+ * session-level `com.fsk.threadwire.session.ChatRequest` (M1) - that type represents
+ * what's known *before* headers/context exist, since `ChatContextProvider` is what
+ * produces them; `ChatSession` translates one into this once it has.
  */
-data class ChatRequest(
+data class TransportRequest(
     val url: String,
     val headers: Map<String, String> = emptyMap(),
     val body: String,
@@ -35,8 +37,8 @@ interface ChatTransport {
      * recovered per the implementation's reconnection policy.
      *
      * ID-based reconciliation of repeated parts (e.g. folding several `card-update`s
-     * with the same id into one logical card) is NOT done here - that's the future
-     * session state machine's job (M1); this only emits the raw parsed sequence.
+     * with the same id into one logical card) is NOT done here - that's
+     * `ChatStateReducer`'s job (M1); this only emits the raw parsed sequence.
      */
-    fun streamEvents(request: ChatRequest): Flow<ChatEvent>
+    fun streamEvents(request: TransportRequest): Flow<ChatEvent>
 }

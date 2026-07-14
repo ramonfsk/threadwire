@@ -50,7 +50,7 @@ class SseChatTransportTest {
         val client = HttpClient(engine) { install(SSE) }
         val transport = SseChatTransport(client)
 
-        val events = transport.streamEvents(ChatRequest(url = "https://example.test/chat", body = "{}")).toList()
+        val events = transport.streamEvents(TransportRequest(url = "https://example.test/chat", body = "{}")).toList()
 
         assertEquals(1, requestCount)
         assertEquals(
@@ -90,7 +90,7 @@ class SseChatTransportTest {
         val client = HttpClient(engine) { install(SSE) }
         val transport = SseChatTransport(client, reconnectPolicy = ReconnectPolicy(initialDelayMs = 1, maxDelayMs = 1))
 
-        val events = transport.streamEvents(ChatRequest(url = "https://example.test/chat", body = "{}")).toList()
+        val events = transport.streamEvents(TransportRequest(url = "https://example.test/chat", body = "{}")).toList()
 
         assertEquals(2, requestCount)
         assertEquals("2", lastEventIdOnRetry)
@@ -116,7 +116,7 @@ class SseChatTransportTest {
         val transport = SseChatTransport(client)
 
         assertFailsWith<ChatTransportException> {
-            transport.streamEvents(ChatRequest(url = "https://example.test/chat", body = "{}")).toList()
+            transport.streamEvents(TransportRequest(url = "https://example.test/chat", body = "{}")).toList()
         }
         assertEquals(1, requestCount)
     }
@@ -133,7 +133,7 @@ class SseChatTransportTest {
         val transport = SseChatTransport(client, reconnectPolicy = policy)
 
         assertFailsWith<ChatTransportException> {
-            transport.streamEvents(ChatRequest(url = "https://example.test/chat", body = "{}")).toList()
+            transport.streamEvents(TransportRequest(url = "https://example.test/chat", body = "{}")).toList()
         }
         assertTrue(requestCount > 1)
         assertEquals(policy.maxAttempts + 1, requestCount)
