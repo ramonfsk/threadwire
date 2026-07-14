@@ -146,11 +146,12 @@ class ChatEventParserTest {
 
     @Test
     fun fallsBackToUnknownForMalformedJson() {
-        // Not valid JSON at all - kotlinx.serialization throws a SerializationException
-        // (a JSON decoding failure), which the parser must swallow, not propagate.
+        // Not valid JSON at all - kotlinx.serialization throws an IllegalArgumentException
+        // for this (not a SerializationException), which the parser must swallow, not
+        // propagate. Verified against actual runtime behavior, not assumed.
         val event = ChatEventParser.parse("not json at all {{{")
         val unknown = assertIs<ChatEvent.Unknown>(event)
-        assertEquals("parse-error", unknown.type)
+        assertEquals("malformed", unknown.type)
     }
 
     @Test

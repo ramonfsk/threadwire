@@ -4,6 +4,7 @@ import com.fsk.threadwire.protocol.ChatEvent
 import com.fsk.threadwire.protocol.ChatEventParser
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.ResponseException
+import io.ktor.client.plugins.sse.SSEClientException
 import io.ktor.client.plugins.sse.sse
 import io.ktor.client.request.header
 import io.ktor.client.request.setBody
@@ -74,7 +75,16 @@ class SseChatTransport(
     }
 
     private suspend fun reconnectOrThrow(attempt: Int, cause: Exception?) {
-        val isClientError = (cause as? ResponseException)?.response?.status?.value?.let { it in 400..499 } ?: false
+        // The SSE plugin wraps a non-2xx/wrong-content-type response in its own
+        // SSEClientException (an IllegalStateException, not a ResponseException) -
+        // confirmed against Ktor 3.5.1 sources (SSE.kt's checkResponse). ResponseException
+        // is kept as a fallback for other Ktor plugins/paths that might throw it directly.
+        val statusCode = when (cause) {
+            is SSEClientException -> cause.response?.status?.value
+            is ResponseException -> cause.response.status.value
+            else -> null
+        }
+        val isClientError = statusCode?.let { it in 400..499 } ?: false
         val transportError = ChatTransportException(
             message = cause?.message ?: "SSE stream ended before a finish event",
             isRetryable = !isClientError,

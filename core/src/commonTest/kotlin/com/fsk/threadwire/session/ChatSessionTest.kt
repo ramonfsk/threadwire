@@ -4,6 +4,7 @@ import com.fsk.threadwire.protocol.ChatEvent
 import com.fsk.threadwire.transport.ChatTransport
 import com.fsk.threadwire.transport.ChatTransportException
 import com.fsk.threadwire.transport.TransportRequest
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -35,6 +36,7 @@ private class RecordingContextProvider : ChatContextProvider {
 private fun testConfig(provider: ChatContextProvider) =
     ChatConfig(baseUrl = "https://example.test/chat", contextProvider = provider)
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class ChatSessionTest {
 
     @Test
