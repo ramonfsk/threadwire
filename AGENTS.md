@@ -71,3 +71,5 @@ If a task touches a part of the design that isn't fully specified yet (naming, e
 An AI agent working on this repo may open PRs (`gh pr create` or equivalent), but must **never merge a PR** — not even one it opened itself — unless explicitly told to merge that specific PR in that specific moment. The maintainer always reviews and merges PRs himself. A past approval to merge one PR does not carry over to the next one; treat every merge as needing fresh, explicit permission.
 
 Likewise, don't proactively run lint, test suites, or build/run the app "to verify" a change unless asked to in the moment. The maintainer prefers to do that validation himself — describe what changed and what to check instead of spending effort re-deriving it.
+
+The repo auto-deletes head branches on merge (GitHub setting), so there's no remote branch to clean up after a merge. When told a PR was merged, sync local state: `git checkout dev && git pull && git fetch --prune && git branch -d <merged-branch>`.
