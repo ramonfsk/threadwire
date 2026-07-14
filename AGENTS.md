@@ -33,15 +33,20 @@ Integrator's BFF — out of scope; owns LLM choice, context, handoff routing, ac
 - **Cards**: own minimal schema (not Adaptive Cards), versioned, rendered 100% natively. The LLM never generates card JSON directly — it calls small business-level tools, and only the BFF translates those into card JSON. See design doc §8.
 - **Handoff**: bidirectional cycle (`ai_active ⇄ handoff_pending ⇄ handoff_active`), not a one-way escalation. See design doc §6.1.
 
-## Module layout (mono-repo, target structure — not created yet)
+## Module layout (mono-repo, target structure)
 
 ```
 :core             pure KMP, no UI — transport, context, state machine, card schema, telemetry
-:ui-android       Jetpack Compose, consumes :core
-:ui-ios           SwiftUI (via SPM), consumes :core
-:sample-app-android / :sample-app-ios
-                  consume published artifacts only — never privileged access to :core/:ui-*
+                  (exists: toolchain smoke test only, no SDK logic yet)
+:ui-android       Jetpack Compose, consumes :core (not created yet)
+:ui-ios           SwiftUI (via SPM), consumes :core (not created yet)
+:sample-app-android / iosApp
+                  consume :core directly for now (own native UI, no shared UI module) —
+                  will move to consuming :ui-android/:ui-ios once those exist, and must
+                  never get privileged access to :core/:ui-* internals
 ```
+
+The iOS host app builds `:core` as a framework named `ThreadwireCore` (`import ThreadwireCore` in Swift), embedded via an Xcode Run Script phase that calls `./gradlew :core:embedAndSignAppleFrameworkForXcode`.
 
 ## Conventions
 
@@ -55,7 +60,7 @@ Integrator's BFF — out of scope; owns LLM choice, context, handoff routing, ac
 
 ## Current status
 
-Design phase is complete (design doc v0.1). Implementation has not started yet — no `:core`/`:ui-*` modules exist in the repo yet. Roadmap order: M0 SSE transport → M1 session/context → M2 native text UI → M3 media → M4 cards → M5 telemetry → M6 WebSocket handoff → M7 sample apps. Check `README.md#roadmap` and recent commits/issues before assuming any milestone is further along than it is.
+Design phase is complete (design doc v0.1). The mono-repo has a Kotlin Multiplatform toolchain smoke test (`:core` + `:sample-app-android` + `iosApp`, each with a trivial "hello world" greeting) — no real SDK logic (transport, session, cards, etc.) exists yet. Roadmap order: M0 SSE transport → M1 session/context → M2 native text UI → M3 media → M4 cards → M5 telemetry → M6 WebSocket handoff → M7 sample apps. Check `README.md#roadmap` and recent commits/issues before assuming any milestone is further along than it is.
 
 ## Before implementing something with an open design gap
 
