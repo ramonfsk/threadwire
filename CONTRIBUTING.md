@@ -60,6 +60,10 @@ There are two PR templates in [`.github/PULL_REQUEST_TEMPLATE/`](./.github/PULL_
 - Feature/fix/docs/chore PRs into `dev`: **squash merge** — keep one clean, Conventional-Commits-titled commit per PR.
 - The `dev` → `main` release PR: **merge commit** (not squash) — `main` should retain the individual feature commits from `dev`, not collapse a whole release into one commit.
 
+### Branch cleanup after merge
+
+The repo has "automatically delete head branches" enabled, so a feature/fix/docs/chore branch is deleted automatically the moment its PR merges into `dev` — no manual step needed. After pulling `dev` locally, delete your own local copy of the merged branch too (`git branch -d <branch>`); `git fetch --prune` clears the stale remote-tracking ref.
+
 ## Code of conduct
 
 This project follows the [Contributor Covenant](./CODE_OF_CONDUCT.md).
