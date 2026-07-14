@@ -57,9 +57,29 @@ Threadwire doesn't compete with Stream/Sendbird/CometChat on messaging infrastru
 
 ## Status
 
-**This project is in the design phase. There is no released code yet.**
+**This project is in early implementation.** The design doc is final for v0.1; the mono-repo has a Kotlin Multiplatform toolchain smoke test (`:core` + `:sample-app-android` + `sample-app-ios`) but no SDK functionality yet.
 
-The full architecture — wire protocol, transport design, threat model for the action/telemetry boundaries, and module structure — is written up in [`docs/design-doc.md`](./docs/design-doc.md). Feedback and discussion on the design are very welcome via issues before implementation starts.
+The full architecture — wire protocol, transport design, threat model for the action/telemetry boundaries, and module structure — is written up in [`docs/design-doc.md`](./docs/design-doc.md). Feedback and discussion on the design are very welcome via issues.
+
+## Project layout
+
+This is a Kotlin Multiplatform project targeting Android and iOS.
+
+- [`core`](./core/src) — pure KMP code shared between platforms (transport, state, parsing; no UI — see [design doc §2](./docs/design-doc.md#2-design-principles-non-negotiable)). Most important subfolder: [`commonMain`](./core/src/commonMain/kotlin).
+- [`sample-app-android`](./sample-app-android) — Android host app; consumes `:core` and renders its own native Jetpack Compose UI directly (never a shared/cross-platform UI module).
+- [`sample-app-ios`](./sample-app-ios/sample-app-ios) — iOS host app (Xcode project); consumes `:core` (built as the `ThreadwireCore` framework) and renders its own native SwiftUI.
+
+`:ui-android` and `:ui-ios` (the actual reusable chat UI modules) don't exist yet — see the [roadmap](#roadmap).
+
+### Running the apps
+
+- Android app: `./gradlew :sample-app-android:assembleDebug`
+- iOS app: open [`sample-app-ios`](./sample-app-ios) in Xcode and run it from there.
+
+### Running tests
+
+- Android tests: `./gradlew :core:testAndroidHostTest`
+- iOS tests: `./gradlew :core:iosSimulatorArm64Test`
 
 ## Planned API shape
 
