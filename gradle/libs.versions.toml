@@ -14,9 +14,7 @@ junit = "4.13.2"
 kotlin = "2.4.0"
 kotlinx-coroutines = "1.9.0"
 kotlinx-serialization = "1.7.3"
-# NOTE: pin against whatever is the actual latest stable Ktor 3.x release compatible with
-# Kotlin 2.4.0 at implementation/build time - verify before relying on this exact version.
-ktor = "3.0.1"
+ktor = "3.5.1"
 material3 = "1.11.0-alpha07"
 
 [libraries]
