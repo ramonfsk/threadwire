@@ -67,11 +67,9 @@ This is a Kotlin Multiplatform project targeting Android and iOS.
 
 - [`core`](./core/src) — pure KMP code shared between platforms (transport, state, parsing; no UI — see [design doc §2](./docs/design-doc.md#2-design-principles-non-negotiable)). Most important subfolder: [`commonMain`](./core/src/commonMain/kotlin).
 - [`sample-app-android`](./sample-app-android) — Android host app; consumes `:core` and renders its own native Jetpack Compose UI directly (never a shared/cross-platform UI module).
-- [`sample-app-ios`](./sample-app-ios/iosApp) — iOS host app (Xcode project, currently named `iosApp` internally — see note below); consumes `:core` (built as the `ThreadwireCore` framework) and renders its own native SwiftUI.
+- [`sample-app-ios`](./sample-app-ios/sample-app-ios) — iOS host app (Xcode project); consumes `:core` (built as the `ThreadwireCore` framework) and renders its own native SwiftUI.
 
 `:ui-android` and `:ui-ios` (the actual reusable chat UI modules) don't exist yet — see the [roadmap](#roadmap).
-
-> The `sample-app-ios` folder currently contains an Xcode project/target/scheme still internally named `iosApp` (only the containing folder was renamed so far — renaming the Xcode project itself is safer to do from within Xcode).
 
 ### Running the apps
 

@@ -6,35 +6,21 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		2CA63B6F3005C63C00119217 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2CA63B6A3005C63C00119217 /* Assets.xcassets */; };
+		2CA63B703005C63C00119217 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2CA63B683005C63C00119217 /* Preview Assets.xcassets */; };
+		2CA63B723005C63C00119217 /* iOSApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CA63B6D3005C63C00119217 /* iOSApp.swift */; };
+		2CA63B733005C63C00119217 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CA63B6B3005C63C00119217 /* ContentView.swift */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
+		2CA63B683005C63C00119217 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
+		2CA63B6A3005C63C00119217 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		2CA63B6B3005C63C00119217 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		2CA63B6C3005C63C00119217 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		2CA63B6D3005C63C00119217 /* iOSApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = iOSApp.swift; sourceTree = "<group>"; };
 		76583E62B666CE4487A03770 /* Threadwire.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Threadwire.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
-
-/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		A8956D3F79A8A6223E76D11F /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
-			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			membershipExceptions = (
-				Info.plist,
-			);
-			target = 43B14D138B700DCDC9EFF6DD /* iosApp */;
-		};
-/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
-
-/* Begin PBXFileSystemSynchronizedRootGroup section */
-		01033CF2F405ADCFB91AFFE2 /* iosApp */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-				A8956D3F79A8A6223E76D11F /* PBXFileSystemSynchronizedBuildFileExceptionSet */,
-			);
-			path = iosApp;
-			sourceTree = "<group>";
-		};
-		3176DDC1F4B7B0314E7B2392 /* Configuration */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = Configuration;
-			sourceTree = "<group>";
-		};
-/* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		A7A94BB1EE6B1C18924FE563 /* Frameworks */ = {
@@ -47,11 +33,36 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		2CA63B693005C63C00119217 /* Preview Content */ = {
+			isa = PBXGroup;
+			children = (
+				2CA63B683005C63C00119217 /* Preview Assets.xcassets */,
+			);
+			path = "Preview Content";
+			sourceTree = "<group>";
+		};
+		2CA63B6E3005C63C00119217 /* sample-app-ios */ = {
+			isa = PBXGroup;
+			children = (
+				2CA63B693005C63C00119217 /* Preview Content */,
+				2CA63B6A3005C63C00119217 /* Assets.xcassets */,
+				2CA63B6B3005C63C00119217 /* ContentView.swift */,
+				2CA63B6C3005C63C00119217 /* Info.plist */,
+				2CA63B6D3005C63C00119217 /* iOSApp.swift */,
+			);
+			path = "sample-app-ios";
+			sourceTree = "<group>";
+		};
+		3176DDC1F4B7B0314E7B2392 /* Configuration */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = Configuration;
+			sourceTree = "<group>";
+		};
 		4526595E99775E68584FF335 = {
 			isa = PBXGroup;
 			children = (
 				3176DDC1F4B7B0314E7B2392 /* Configuration */,
-				01033CF2F405ADCFB91AFFE2 /* iosApp */,
+				2CA63B6E3005C63C00119217 /* sample-app-ios */,
 				E2E854F69C11CF0460C21A1C /* Products */,
 			);
 			sourceTree = "<group>";
@@ -67,9 +78,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		43B14D138B700DCDC9EFF6DD /* iosApp */ = {
+		43B14D138B700DCDC9EFF6DD /* sample-app-ios */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = B93DFEB5742CB34062FC9C25 /* Build configuration list for PBXNativeTarget "iosApp" */;
+			buildConfigurationList = B93DFEB5742CB34062FC9C25 /* Build configuration list for PBXNativeTarget "sample-app-ios" */;
 			buildPhases = (
 				46E1A5A097C77139644C11B6 /* Compile Kotlin Framework */,
 				8B693BBA5F6D21DC90FF94B7 /* Sources */,
@@ -80,13 +91,10 @@
 			);
 			dependencies = (
 			);
-			fileSystemSynchronizedGroups = (
-				01033CF2F405ADCFB91AFFE2 /* iosApp */,
-			);
-			name = iosApp;
+			name = "sample-app-ios";
 			packageProductDependencies = (
 			);
-			productName = iosApp;
+			productName = "sample-app-ios";
 			productReference = 76583E62B666CE4487A03770 /* Threadwire.app */;
 			productType = "com.apple.product-type.application";
 		};
@@ -105,7 +113,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 2A49EB793388EE0215CE6239 /* Build configuration list for PBXProject "iosApp" */;
+			buildConfigurationList = 2A49EB793388EE0215CE6239 /* Build configuration list for PBXProject "sample-app-ios" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -119,7 +127,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				43B14D138B700DCDC9EFF6DD /* iosApp */,
+				43B14D138B700DCDC9EFF6DD /* sample-app-ios */,
 			);
 		};
 /* End PBXProject section */
@@ -129,6 +137,8 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2CA63B6F3005C63C00119217 /* Assets.xcassets in Resources */,
+				2CA63B703005C63C00119217 /* Preview Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -161,6 +171,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2CA63B723005C63C00119217 /* iOSApp.swift in Sources */,
+				2CA63B733005C63C00119217 /* ContentView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -175,11 +187,11 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_ASSET_PATHS = "\"iosApp/Preview Content\"";
+				DEVELOPMENT_ASSET_PATHS = "\"sample-app-ios/Preview Content\"";
 				DEVELOPMENT_TEAM = "${TEAM_ID}";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = iosApp/Info.plist;
+				INFOPLIST_FILE = "sample-app-ios/Info.plist";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -203,11 +215,11 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_ASSET_PATHS = "\"iosApp/Preview Content\"";
+				DEVELOPMENT_ASSET_PATHS = "\"sample-app-ios/Preview Content\"";
 				DEVELOPMENT_TEAM = "";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = iosApp/Info.plist;
+				INFOPLIST_FILE = "sample-app-ios/Info.plist";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -349,7 +361,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		2A49EB793388EE0215CE6239 /* Build configuration list for PBXProject "iosApp" */ = {
+		2A49EB793388EE0215CE6239 /* Build configuration list for PBXProject "sample-app-ios" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				B41BB5E956CE1CCAC9FC3549 /* Debug */,
@@ -358,7 +370,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		B93DFEB5742CB34062FC9C25 /* Build configuration list for PBXNativeTarget "iosApp" */ = {
+		B93DFEB5742CB34062FC9C25 /* Build configuration list for PBXNativeTarget "sample-app-ios" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				681EF3D0819211AE1FD002F9 /* Debug */,

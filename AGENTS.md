@@ -60,7 +60,7 @@ The iOS host app builds `:core` as a framework named `ThreadwireCore` (`import T
 
 ## Current status
 
-Design phase is complete (design doc v0.1). The mono-repo has a Kotlin Multiplatform toolchain smoke test (`:core` + `:sample-app-android` + `sample-app-ios`, each with a trivial "hello world" greeting) — no real SDK logic (transport, session, cards, etc.) exists yet. Note: `sample-app-ios`'s Xcode project/target/scheme are still internally named `iosApp` (only the containing folder was renamed so far). Roadmap order: M0 SSE transport → M1 session/context → M2 native text UI → M3 media → M4 cards → M5 telemetry → M6 WebSocket handoff → M7 sample apps. Check `README.md#roadmap` and recent commits/issues before assuming any milestone is further along than it is.
+Design phase is complete (design doc v0.1). The mono-repo has a Kotlin Multiplatform toolchain smoke test (`:core` + `:sample-app-android` + `sample-app-ios`, each with a trivial "hello world" greeting) — no real SDK logic (transport, session, cards, etc.) exists yet. Roadmap order: M0 SSE transport → M1 session/context → M2 native text UI → M3 media → M4 cards → M5 telemetry → M6 WebSocket handoff → M7 sample apps. Check `README.md#roadmap` and recent commits/issues before assuming any milestone is further along than it is.
 
 ## Before implementing something with an open design gap
 
