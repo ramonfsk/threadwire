@@ -37,16 +37,24 @@ Integrator's BFF — out of scope; owns LLM choice, context, handoff routing, ac
 
 ```
 :core             pure KMP, no UI — transport, context, state machine, card schema, telemetry
-                  (exists: toolchain smoke test only, no SDK logic yet)
+                  (exists: protocol/ + transport/ packages implement M0 - SSE transport
+                  and event protocol parsing. ChatSession/ChatContextProvider/ChatConfig
+                  (M1), cards (M4), telemetry (M5), WebSocket handoff (M6) not built yet)
 :ui-android       Jetpack Compose, consumes :core (not created yet)
 :ui-ios           SwiftUI (via SPM), consumes :core (not created yet)
 :sample-app-android / sample-app-ios
                   consume :core directly for now (own native UI, no shared UI module) —
                   will move to consuming :ui-android/:ui-ios once those exist, and must
                   never get privileged access to :core/:ui-* internals
+:tools:fake-sse-server
+                  dev-only local Ktor server for manually testing SseChatTransport
+                  (scripted event sequence + deliberate mid-stream drop) - never a
+                  dependency of :core, not part of what gets published
 ```
 
 The iOS host app builds `:core` as a framework named `ThreadwireCore` (`import ThreadwireCore` in Swift), embedded via an Xcode Run Script phase that calls `./gradlew :core:embedAndSignAppleFrameworkForXcode`.
+
+`:core`'s transport/protocol layer (`com.fsk.threadwire.protocol.ChatEvent`/`ChatEventParser`, `com.fsk.threadwire.transport.ChatTransport`/`SseChatTransport`) is deliberately decoupled from `ChatSession`/`ChatContextProvider`/`ChatConfig` (M1, not built yet) - `ChatTransport.streamEvents` takes a plain `ChatRequest` (url/headers/body), so M1 can wire in the not-yet-built session/context layer without this contract changing. ID-based reconciliation of repeated-id parts (folding several `card-update`s into one logical card, etc.) is intentionally NOT implemented here - that's M1's job.
 
 ## Conventions
 
@@ -60,7 +68,7 @@ The iOS host app builds `:core` as a framework named `ThreadwireCore` (`import T
 
 ## Current status
 
-Design phase is complete (design doc v0.1). The mono-repo has a Kotlin Multiplatform toolchain smoke test (`:core` + `:sample-app-android` + `sample-app-ios`, each with a trivial "hello world" greeting) — no real SDK logic (transport, session, cards, etc.) exists yet. Roadmap order: M0 SSE transport → M1 session/context → M2 native text UI → M3 media → M4 cards → M5 telemetry → M6 WebSocket handoff → M7 sample apps. Check `README.md#roadmap` and recent commits/issues before assuming any milestone is further along than it is.
+Design phase is complete (design doc v0.1). M0 (SSE transport + event protocol parsing) is implemented in `:core` (see Module layout above) - pending the maintainer's own build/manual validation before merge. Roadmap order: M0 SSE transport → M1 session/context → M2 native text UI → M3 media → M4 cards → M5 telemetry → M6 WebSocket handoff → M7 sample apps. Check `README.md#roadmap` and recent commits/issues before assuming any milestone is further along than it is.
 
 ## Before implementing something with an open design gap
 
