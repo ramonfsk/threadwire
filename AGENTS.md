@@ -65,3 +65,9 @@ Design phase is complete (design doc v0.1). The mono-repo has a Kotlin Multiplat
 ## Before implementing something with an open design gap
 
 If a task touches a part of the design that isn't fully specified yet (naming, exact schema fields, which optional pieces to build), stop and ask the maintainer rather than assuming a default — this project treats that as a hard rule, not a suggestion.
+
+## Never merge automatically; let the maintainer validate manually
+
+An AI agent working on this repo may open PRs (`gh pr create` or equivalent), but must **never merge a PR** — not even one it opened itself — unless explicitly told to merge that specific PR in that specific moment. The maintainer always reviews and merges PRs himself. A past approval to merge one PR does not carry over to the next one; treat every merge as needing fresh, explicit permission.
+
+Likewise, don't proactively run lint, test suites, or build/run the app "to verify" a change unless asked to in the moment. The maintainer prefers to do that validation himself — describe what changed and what to check instead of spending effort re-deriving it.
