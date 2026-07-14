@@ -126,7 +126,9 @@ See the [design doc](./docs/design-doc.md#15-suggested-roadmap-milestones) for d
 
 ## Contributing
 
-The project isn't accepting code contributions yet — it's still in the design phase. The most useful contribution right now is feedback on the [design doc](./docs/design-doc.md): open an issue if something looks wrong, underspecified, or worth challenging.
+The project isn't accepting external code contributions yet — it's still in the design/early-implementation phase. The most useful contribution right now is feedback on the [design doc](./docs/design-doc.md): open a **Design feedback** issue if something looks wrong, underspecified, or worth challenging.
+
+See [CONTRIBUTING.md](./CONTRIBUTING.md) for issue templates, branch/commit conventions, and the [code of conduct](./CODE_OF_CONDUCT.md) — these apply to the maintainer's own workflow too, not just external contributors. Security issues should go to [SECURITY.md](./SECURITY.md) instead of a public issue. [AGENTS.md](./AGENTS.md) has a condensed project context for AI coding assistants.
 
 ## License
 

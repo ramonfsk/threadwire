@@ -1,0 +1,29 @@
+name: Design feedback
+description: Challenge or question a decision in the design doc
+title: "[Design]: "
+labels: ["design-doc"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this template for feedback on the architecture, wire protocol, module structure, or any other decision recorded in [docs/design-doc.md](https://github.com/ramonfsk/threadwire/blob/main/docs/design-doc.md). This is currently the most valuable kind of contribution to Threadwire.
+  - type: input
+    id: section
+    attributes:
+      label: Design doc section
+      description: Which section does this concern?
+      placeholder: e.g. "6. Transport" or "8.1 Who builds the card"
+    validations:
+      required: true
+  - type: textarea
+    id: concern
+    attributes:
+      label: What's underspecified, wrong, or worth challenging?
+    validations:
+      required: true
+  - type: textarea
+    id: suggestion
+    attributes:
+      label: Suggested alternative (optional)
+    validations:
+      required: false

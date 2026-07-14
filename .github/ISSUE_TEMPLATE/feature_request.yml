@@ -1,0 +1,31 @@
+name: Feature request
+description: Suggest new functionality or a roadmap addition
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve?
+      description: What are you trying to do that Threadwire doesn't support today?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+    validations:
+      required: false
+  - type: checkboxes
+    id: principles
+    attributes:
+      label: Non-negotiable principles check
+      description: See section 2 of the design doc.
+      options:
+        - label: I've read [design doc §2](https://github.com/ramonfsk/threadwire/blob/main/docs/design-doc.md#2-design-principles-non-negotiable) and believe this proposal is compatible with it (native UI only, no direct LLM provider calls, no sensitive actions executed by the library, etc.)
