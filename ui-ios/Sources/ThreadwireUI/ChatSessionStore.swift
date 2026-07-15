@@ -20,7 +20,11 @@ final class ChatSessionStore: ObservableObject {
 
     init(session: ChatSession) {
         self.session = session
-        self.state = session.state.value
+        // StateFlow<T>'s generic `value` property is type-erased across the K/N Swift
+        // bridge (no SKIE) - it comes back as `Any?`, not `ChatState`, so it needs an
+        // explicit cast. `observeState`'s callback isn't affected: its parameter type
+        // is a concrete ChatState in Kotlin, not a generic type parameter.
+        self.state = session.state.value as! ChatState
         self.subscription = session.observeState { [weak self] newState in
             DispatchQueue.main.async {
                 self?.state = newState
@@ -45,7 +49,7 @@ final class ChatSessionStore: ObservableObject {
     func retryLastUserMessage() {
         guard
             let lastUserMessage = state.messages.last(where: { $0.author == .user }),
-            let textPart = lastUserMessage.parts.first(where: { $0 is MessagePart.Text }) as? MessagePart.Text
+            let textPart = lastUserMessage.parts.first(where: { $0 is MessagePartText }) as? MessagePartText
         else { return }
         sendMessage(textPart.text)
     }

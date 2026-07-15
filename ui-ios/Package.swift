@@ -20,7 +20,14 @@ let package = Package(
         .library(name: "ThreadwireUI", targets: ["ThreadwireUI"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/microsoft/SwiftStreamingMarkdown", from: "0.1.0"),
+        // Pinned to a branch, not a semver range (`from:`) - SwiftStreamingMarkdown
+        // itself depends on a fork of `highlightswift` via a commit `revision:`, which
+        // SPM treats as an "unstable version." Requiring SwiftStreamingMarkdown via a
+        // semver range forces "stable version" resolution rules onto that transitive
+        // dependency too, which fails ("required using a stable-version but depends on
+        // an unstable-version package"). branch-based resolution doesn't impose that
+        // constraint. Confirmed against a real Xcode package-resolution error.
+        .package(url: "https://github.com/microsoft/SwiftStreamingMarkdown", branch: "main"),
     ],
     targets: [
         .binaryTarget(

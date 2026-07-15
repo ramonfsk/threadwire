@@ -9,11 +9,11 @@ struct PhaseBannerView: View {
     let phase: SessionPhase
 
     private var text: String? {
-        if phase is SessionPhase.AiActive {
+        if phase is SessionPhaseAiActive {
             return nil
-        } else if phase is SessionPhase.HandoffPending {
+        } else if phase is SessionPhaseHandoffPending {
             return "You're being transferred to a human agent…"
-        } else if let active = phase as? SessionPhase.HandoffActive {
+        } else if let active = phase as? SessionPhaseHandoffActive {
             return active.agentName.isEmpty ? "Connected with a human agent" : "Connected with \(active.agentName)"
         }
         return nil

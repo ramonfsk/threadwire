@@ -5,13 +5,13 @@ extension ChatMessage {
     /// description for non-text parts.
     func accessibleSummary() -> String {
         let joined = parts.map { part -> String in
-            if let text = part as? MessagePart.Text {
+            if let text = part as? MessagePartText {
                 return text.text
-            } else if part is MessagePart.ToolCall {
+            } else if part is MessagePartToolCall {
                 return "tool call"
-            } else if part is MessagePart.Card {
+            } else if part is MessagePartCard {
                 return "card"
-            } else if let custom = part as? MessagePart.Custom {
+            } else if let custom = part as? MessagePartCustom {
                 return custom.type
             } else {
                 return "unsupported content"

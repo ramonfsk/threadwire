@@ -54,18 +54,21 @@ struct MessageListView: View {
         }
     }
 
+    // Plain if/else on MessageAuthor rather than switch/case: Kotlin enums bridged
+    // via Kotlin/Native's Obj-C export aren't necessarily `@frozen` Swift enums, and
+    // exhaustiveness-checking their exact bridged shape isn't reliable without a real
+    // build (see M2 debugging notes) - direct equality checks sidestep that entirely.
     @ViewBuilder
     private func messageView(for message: ChatMessage) -> some View {
-        switch message.author {
-        case .user:
+        if message.author == .user {
             UserBubbleView(message: message)
-        case .ai:
+        } else if message.author == .ai {
             AssistantBubbleView(message: message)
-        case .humanAgent:
-            HumanAgentBubbleView(message: message, agentName: (state.phase as? SessionPhase.HandoffActive)?.agentName)
-        case .system:
+        } else if message.author == .humanAgent {
+            HumanAgentBubbleView(message: message, agentName: (state.phase as? SessionPhaseHandoffActive)?.agentName)
+        } else if message.author == .system {
             SystemBannerView(message: message)
-        @unknown default:
+        } else {
             EmptyView()
         }
     }

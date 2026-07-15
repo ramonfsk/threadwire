@@ -11,6 +11,7 @@
 		2CA63B703005C63C00119217 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2CA63B683005C63C00119217 /* Preview Assets.xcassets */; };
 		2CA63B723005C63C00119217 /* iOSApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CA63B6D3005C63C00119217 /* iOSApp.swift */; };
 		2CA63B733005C63C00119217 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CA63B6B3005C63C00119217 /* ContentView.swift */; };
+		2CAD7C3F300833570035216C /* ThreadwireUI in Frameworks */ = {isa = PBXBuildFile; productRef = 2CAD7C3E300833570035216C /* ThreadwireUI */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -22,11 +23,20 @@
 		76583E62B666CE4487A03770 /* Threadwire.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Threadwire.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		3176DDC1F4B7B0314E7B2392 /* Configuration */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = Configuration;
+			sourceTree = "<group>";
+		};
+/* End PBXFileSystemSynchronizedRootGroup section */
+
 /* Begin PBXFrameworksBuildPhase section */
 		A7A94BB1EE6B1C18924FE563 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2CAD7C3F300833570035216C /* ThreadwireUI in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -51,11 +61,6 @@
 				2CA63B6D3005C63C00119217 /* iOSApp.swift */,
 			);
 			path = "sample-app-ios";
-			sourceTree = "<group>";
-		};
-		3176DDC1F4B7B0314E7B2392 /* Configuration */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = Configuration;
 			sourceTree = "<group>";
 		};
 		4526595E99775E68584FF335 = {
@@ -93,6 +98,7 @@
 			);
 			name = "sample-app-ios";
 			packageProductDependencies = (
+				2CAD7C3E300833570035216C /* ThreadwireUI */,
 			);
 			productName = "sample-app-ios";
 			productReference = 76583E62B666CE4487A03770 /* Threadwire.app */;
@@ -122,6 +128,9 @@
 			);
 			mainGroup = 4526595E99775E68584FF335;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				2CAD7C3D300833570035216C /* XCLocalSwiftPackageReference "../ui-ios" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = E2E854F69C11CF0460C21A1C /* Products */;
 			projectDirPath = "";
@@ -380,6 +389,20 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		2CAD7C3D300833570035216C /* XCLocalSwiftPackageReference "../ui-ios" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = "../ui-ios";
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		2CAD7C3E300833570035216C /* ThreadwireUI */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = ThreadwireUI;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 7B2856DD56079BD5792C1D97 /* Project object */;
 }

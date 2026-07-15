@@ -17,7 +17,7 @@ kotlinx-coroutines = "1.9.0"
 kotlinx-serialization = "1.7.3"
 ktor = "3.5.1"
 material3 = "1.11.0-alpha07"
-mikepenzMarkdown = "0.43.0"
+mikepenzMarkdown = "0.41.0" # 0.42.0+ requires minCompileSdk=37 (verified via AAR metadata); we're on compileSdk 36
 
 [libraries]
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }

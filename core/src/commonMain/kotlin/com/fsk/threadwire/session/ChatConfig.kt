@@ -12,9 +12,17 @@ import io.ktor.client.HttpClientConfig
  * `HttpClient` from a `ChatConfig` yet (see M1 plan's "flagged, provisional decisions" -
  * a default `ChatSession` factory is deferred to when M2's UI needs one). Kept now for
  * shape-fidelity with §7, to avoid a second breaking change later.
+ *
+ * A secondary constructor (not just the primary's default value) covers Swift/Obj-C
+ * callers: Kotlin default parameter values don't bridge there, so without this,
+ * `ChatConfig(baseUrl:contextProvider:)` would fail to compile from Swift with
+ * "missing argument for parameter 'httpClientCustomizer'" (same class of issue as
+ * `ChatSession.companion.create`).
  */
 data class ChatConfig(
     val baseUrl: String,
     val contextProvider: ChatContextProvider,
     val httpClientCustomizer: (HttpClientConfig<*>) -> Unit = {},
-)
+) {
+    constructor(baseUrl: String, contextProvider: ChatContextProvider) : this(baseUrl, contextProvider, {})
+}

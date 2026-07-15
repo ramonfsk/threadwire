@@ -4,7 +4,7 @@ import ThreadwireCore
 /// Left-aligned, visually distinct accent from `AssistantBubbleView` - design doc §14.2
 /// requires AI/human be unambiguously distinguishable, which the differing "Agent"/"AI"
 /// label already satisfies regardless of color choice. [agentName] comes from
-/// `SessionPhase.HandoffActive` when available; a generic "Agent" label is used
+/// `SessionPhaseHandoffActive` when available; a generic "Agent" label is used
 /// otherwise (e.g. phase has since moved on).
 struct HumanAgentBubbleView: View {
     let message: ChatMessage

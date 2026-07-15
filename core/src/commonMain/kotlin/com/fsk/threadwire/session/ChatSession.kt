@@ -142,12 +142,16 @@ class ChatSession(
          *
          * Hosts needing full control over transport/DI (tests, custom engines) can still
          * use the primary constructor directly.
+         *
+         * Two explicit overloads, not one `scope` parameter with a default value:
+         * Kotlin default parameter values don't bridge to Swift/Obj-C (every argument
+         * must be supplied explicitly at the call site), so `ChatSession.companion.create(config:sessionId:)`
+         * would otherwise fail to compile from Swift with "missing argument for parameter 'scope'".
          */
-        fun create(
-            config: ChatConfig,
-            sessionId: String,
-            scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default),
-        ): ChatSession {
+        fun create(config: ChatConfig, sessionId: String): ChatSession =
+            create(config, sessionId, CoroutineScope(SupervisorJob() + Dispatchers.Default))
+
+        fun create(config: ChatConfig, sessionId: String, scope: CoroutineScope): ChatSession {
             val httpClient = HttpClient {
                 install(SSE)
                 config.httpClientCustomizer(this)

@@ -8,13 +8,13 @@ struct MessagePartView: View {
     let part: MessagePart
 
     var body: some View {
-        if let text = part as? MessagePart.Text {
+        if let text = part as? MessagePartText {
             TextPartView(part: text)
-        } else if part is MessagePart.ToolCall {
+        } else if part is MessagePartToolCall {
             InertPlaceholderChip(label: "Tool call")
-        } else if part is MessagePart.Card {
+        } else if part is MessagePartCard {
             InertPlaceholderChip(label: "Card")
-        } else if let custom = part as? MessagePart.Custom {
+        } else if let custom = part as? MessagePartCustom {
             InertPlaceholderChip(label: custom.type)
         } else {
             InertPlaceholderChip(label: "Unsupported")
@@ -22,7 +22,7 @@ struct MessagePartView: View {
     }
 }
 
-/// Bridges one `MessagePart.Text`'s accumulated string (already a full snapshot on
+/// Bridges one `MessagePartText`'s accumulated string (already a full snapshot on
 /// every update, per `:core`'s reducer - never just a delta) into `SwiftStreamingMarkdown`'s
 /// `AsyncStream`-based streaming source.
 private final class TextPartMarkdownSource: ObservableObject, StreamedMarkdownSource {
@@ -43,7 +43,7 @@ private final class TextPartMarkdownSource: ObservableObject, StreamedMarkdownSo
 }
 
 private struct TextPartView: View {
-    let part: MessagePart.Text
+    let part: MessagePartText
     @StateObject private var source = TextPartMarkdownSource()
 
     var body: some View {
