@@ -1,30 +1,25 @@
 import SwiftUI
 import ThreadwireCore
+import ThreadwireUI
 
 struct ContentView: View {
-    @State private var showContent = false
     var body: some View {
-        VStack {
-            Button("Click me!") {
-                withAnimation {
-                    showContent = !showContent
-                }
-            }
-
-            if showContent {
-                VStack(spacing: 16) {
-                    Image(systemName: "swift")
-                        .font(.system(size: 200))
-                        .foregroundColor(.accentColor)
-                    Text("SwiftUI: \(Greeting().greet())")
-                }
-                .transition(.move(edge: .top).combined(with: .opacity))
-            }
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-        .padding()
+        ChatView(config: sampleConfig, sessionId: "sample-session")
     }
 }
+
+/// Illustrative config only, not a real BFF integration - the iOS simulator can reach
+/// the host machine directly via `localhost`, matching `tools/fake-sse-server` (M0)
+/// listening on port 8080 there. A real integrator supplies their own baseUrl/auth.
+private final class SampleContextProvider: ChatContextProvider {
+    func headers(request: ChatRequest) async throws -> [String: String] { [:] }
+    func contextPayload(request: ChatRequest) async throws -> [String: Any] { [:] }
+}
+
+private let sampleConfig = ChatConfig(
+    baseUrl: "http://localhost:8080/chat",
+    contextProvider: SampleContextProvider()
+)
 
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
