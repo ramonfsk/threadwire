@@ -40,19 +40,23 @@ Integrator's BFF — out of scope; owns LLM choice, context, handoff routing, ac
                   (exists: protocol/ (M0, event parsing), transport/ (M0, SSE transport),
                   session/ (M1, ChatSession/ChatContextProvider/ChatConfig/ChatState).
                   Cards (M4), telemetry (M5), WebSocket handoff (M6) not built yet)
-:ui-android       Jetpack Compose, consumes :core (not created yet)
-:ui-ios           SwiftUI (via SPM), consumes :core (not created yet)
+:ui-android       Jetpack Compose, consumes :core (M2 - ChatScreen, bubbles, streaming
+                  markdown via mikepenz, interop ChatView/ChatFragment)
+:ui-ios           SwiftUI via a local SPM package at ui-ios/ (M2 - ChatView, bubbles,
+                  streaming markdown via microsoft/SwiftStreamingMarkdown, interop
+                  ChatViewController). iOS 16+ floor (SwiftStreamingMarkdown's own
+                  requirement, not :core's or UIHostingController's).
 :sample-app-android / sample-app-ios
-                  consume :core directly for now (own native UI, no shared UI module) —
-                  will move to consuming :ui-android/:ui-ios once those exist, and must
-                  never get privileged access to :core/:ui-* internals
+                  consume :ui-android/:ui-ios (not :core directly) - never privileged
+                  access to :core/:ui-* internals, the same way any third-party
+                  integrator would
 :tools:fake-sse-server
                   dev-only local Ktor server for manually testing SseChatTransport
                   (scripted event sequence + deliberate mid-stream drop) - never a
                   dependency of :core, not part of what gets published
 ```
 
-The iOS host app builds `:core` as a framework named `ThreadwireCore` (`import ThreadwireCore` in Swift), embedded via an Xcode Run Script phase that calls `./gradlew :core:embedAndSignAppleFrameworkForXcode`.
+`:core` produces a real combined `ThreadwireCore.xcframework` via the Kotlin Multiplatform `XCFramework` Gradle DSL (task `assembleThreadwireCoreXCFramework`, output at `core/build/XCFrameworks/<debug|release>/`) - `:ui-ios/Package.swift` references it as a local `binaryTarget`. `sample-app-ios` separately still embeds `:core` via its own direct Xcode Run Script (`./gradlew :core:embedAndSignAppleFrameworkForXcode`) - having it wired in two places is a known, deliberate loose end from M2, not yet cleaned up. **Adding `ui-ios` as a local SPM dependency to `sample-app-ios.xcodeproj` is a manual Xcode step (File → Add Package Dependencies → Add Local...) - never hand-edit `.pbxproj` for this.**
 
 `:core`'s transport/protocol layer (`com.fsk.threadwire.protocol.ChatEvent`/`ChatEventParser`, `com.fsk.threadwire.transport.ChatTransport`/`SseChatTransport`) stays decoupled from the session layer - `ChatTransport.streamEvents` takes a `TransportRequest` (url/headers/body, renamed from `ChatRequest` in M1 to avoid colliding with the new session-level type below). `com.fsk.threadwire.session` (M1) adds: `ChatRequest` (minimal, pre-headers/context view handed to `ChatContextProvider` - not the same type as `TransportRequest`), `ChatContextProvider`/`ChatConfig` (design doc §7 - `ChatConfig` intentionally omits `actionHandler`/`telemetrySink` until M4/M5 exist), `ChatState`/`ChatMessage`/`MessagePart`/`SessionPhase` (the state machine's data shape - not specified in the design doc beyond "`StateFlow<ChatState>`", designed from scratch), `ChatStateReducer` (pure fold, ID-reconciliation of repeated parts lives here), and `ChatSession` (ties it together, one turn per `sendMessage(text: String)` call). `ChatSession` depends on the `ChatTransport` interface, never `SseChatTransport` directly, so M6 can later substitute a phase-aware SSE/WebSocket router without a breaking change. `SessionPhase` already models the full handoff cycle (`AiActive`/`HandoffPending`/`HandoffActive`) reacting to M0's already-parsed handoff events, but the transport underneath stays SSE-only until M6 actually builds WebSocket support.
 
@@ -68,7 +72,7 @@ The iOS host app builds `:core` as a framework named `ThreadwireCore` (`import T
 
 ## Current status
 
-Design phase is complete (design doc v0.1). M0 (SSE transport + event protocol parsing) and M1 (session state machine, `ChatContextProvider`, `ChatConfig`) are implemented in `:core` (see Module layout above) - pending the maintainer's own build/manual validation before merge. Roadmap order: M0 SSE transport → M1 session/context → M2 native text UI → M3 media → M4 cards → M5 telemetry → M6 WebSocket handoff → M7 sample apps. Check `README.md#roadmap` and recent commits/issues before assuming any milestone is further along than it is.
+Design phase is complete (design doc v0.1). M0 (SSE transport), M1 (session state machine), and M2 (native UI: `:ui-android`/`:ui-ios`, bubbles, streaming markdown) are implemented (see Module layout above) - pending the maintainer's own build/manual validation before merge. M2 particularly depends on manual validation: the §13.1 UIKit/View-system interop concern (safe-area, keyboard avoidance, navigation-stack integration for `ChatViewController`/`ChatFragment`) can only be confirmed by running the app, not by the code compiling. Roadmap order: M0 SSE transport → M1 session/context → M2 native text UI → M3 media → M4 cards → M5 telemetry → M6 WebSocket handoff → M7 sample apps. Check `README.md#roadmap` and recent commits/issues before assuming any milestone is further along than it is.
 
 ## Before implementing something with an open design gap
 

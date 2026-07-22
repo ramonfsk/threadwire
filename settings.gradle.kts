@@ -30,4 +30,5 @@ dependencyResolutionManagement {
 
 include(":sample-app-android")
 include(":core")
+include(":ui-android")
 include(":tools:fake-sse-server")

@@ -57,7 +57,7 @@ Threadwire doesn't compete with Stream/Sendbird/CometChat on messaging infrastru
 
 ## Status
 
-**This project is in early implementation.** The design doc is final for v0.1. M0 (SSE transport + event protocol parsing) and M1 (session state machine + context injection) are implemented in `:core` — see [roadmap](#roadmap) for what's next.
+**This project is in early implementation.** The design doc is final for v0.1. M0 (SSE transport), M1 (session state machine), and M2 (native UI + streaming markdown) are implemented — see [roadmap](#roadmap) for what's next.
 
 The full architecture — wire protocol, transport design, threat model for the action/telemetry boundaries, and module structure — is written up in [`docs/design-doc.md`](./docs/design-doc.md). Feedback and discussion on the design are very welcome via issues.
 
@@ -65,28 +65,27 @@ The full architecture — wire protocol, transport design, threat model for the 
 
 This is a Kotlin Multiplatform project targeting Android and iOS.
 
-- [`core`](./core/src) — pure KMP code shared between platforms (transport, state, parsing; no UI — see [design doc §2](./docs/design-doc.md#2-design-principles-non-negotiable)). Most important subfolder: [`commonMain`](./core/src/commonMain/kotlin).
-- [`sample-app-android`](./sample-app-android) — Android host app; consumes `:core` and renders its own native Jetpack Compose UI directly (never a shared/cross-platform UI module).
-- [`sample-app-ios`](./sample-app-ios/sample-app-ios) — iOS host app (Xcode project); consumes `:core` (built as the `ThreadwireCore` framework) and renders its own native SwiftUI.
-
-`:ui-android` and `:ui-ios` (the actual reusable chat UI modules) don't exist yet — see the [roadmap](#roadmap).
-
+- [`core`](./core/src) — pure KMP code shared between platforms (transport, state, parsing; no UI — see [design doc §2](./docs/design-doc.md#2-design-principles-non-negotiable)). Most important subfolder: [`commonMain`](./core/src/commonMain/kotlin). Also produces a real `ThreadwireCore.xcframework` (Kotlin Multiplatform's `XCFramework` Gradle DSL) that [`ui-ios`](./ui-ios) consumes as a local Swift package binary target.
+- [`ui-android`](./ui-android) — Jetpack Compose UI (bubbles, streaming markdown, `ChatScreen`), consumes `:core`. Also exposes `ChatView`/`ChatFragment` for apps still on the classic View/Fragment system (design doc §13.1).
+- [`ui-ios`](./ui-ios) — SwiftUI UI (bubbles, streaming markdown, `ChatView`), a local Swift package consuming `:core`'s XCFramework. Also exposes `ChatViewController` for UIKit apps. iOS 16+ (floor set by the markdown library's own requirement).
+- [`sample-app-android`](./sample-app-android) — Android host app; consumes `:ui-android` only (never `:core` directly), the same way any third-party integrator would.
+- [`sample-app-ios`](./sample-app-ios/sample-app-ios) — iOS host app (Xcode project); once `ui-ios` is added as a local Swift package dependency in Xcode (a manual step — see `AGENTS.md`), consumes `:ui-ios` the same way.
 - [`tools/fake-sse-server`](./tools/fake-sse-server) — a small local Ktor server for manually exercising `SseChatTransport` against a real HTTP connection (scripted event sequence, deliberate mid-stream drop to test `Last-Event-ID` reconnection). Not shipped with `:core`, dev-only.
 
 ### Running the apps
 
 - Android app: `./gradlew :sample-app-android:assembleDebug`
-- iOS app: open [`sample-app-ios`](./sample-app-ios) in Xcode and run it from there.
-- Fake SSE server (manual transport testing): `./gradlew :tools:fake-sse-server:run`, then `curl -N -H "Accept: text/event-stream" -X POST http://localhost:8080/chat`
+- iOS app: run `./gradlew :core:assembleThreadwireCoreXCFramework` first (produces the XCFramework `ui-ios/Package.swift` references), add `ui-ios` as a local Swift package dependency in Xcode if not already done (File → Add Package Dependencies → Add Local...), then open [`sample-app-ios`](./sample-app-ios) in Xcode and run it from there.
+- Fake SSE server (manual transport/UI testing): `./gradlew :tools:fake-sse-server:run`, then point the sample apps' `ChatConfig.baseUrl` at it (already the default in both sample apps) - or `curl -N -H "Accept: text/event-stream" -X POST http://localhost:8080/chat` to exercise it directly.
 
 ### Running tests
 
 - Android tests: `./gradlew :core:testAndroidHostTest`
 - iOS tests: `./gradlew :core:iosSimulatorArm64Test`
 
-## Planned API shape
+## API shape (as implemented through M2)
 
-> ⚠️ Illustrative only — not implemented yet, syntax subject to change.
+`ChatConfig` doesn't have `actionHandler`/`telemetrySink` yet — those are `ChatActionHandler` (M4) and `ChatTelemetrySink` (M5), added later as new constructor parameters once those milestones land.
 
 ```kotlin
 // commonMain — shared across iOS and Android
@@ -100,25 +99,19 @@ val config = ChatConfig(
             "accountTier" to "premium"
         )
     },
-    actionHandler = object : ChatActionHandler {
-        override fun handle(actionId: String, payload: Map<String, Any?>) {
-            // Your app decides what "authorize_payment" means. Threadwire never does.
-        }
-    },
-    telemetrySink = object : ChatTelemetrySink {
-        override fun track(event: ChatTelemetryEvent) = analytics.log(event)
-    }
 )
 ```
 
 ```swift
 // iOS — SwiftUI
-ChatView(config: config)
+ChatView(config: config, sessionId: "some-session-id")
+// UIKit: ChatViewController(config: config, sessionId: "some-session-id")
 ```
 
 ```kotlin
 // Android — Jetpack Compose
-ChatScreen(config = config)
+ChatScreen(config = config, sessionId = "some-session-id")
+// Classic View/Fragment: ChatView (AbstractComposeView) / ChatFragment
 ```
 
 ## Architecture at a glance
@@ -137,8 +130,8 @@ Full breakdown in the [design doc](./docs/design-doc.md).
 ## Roadmap
 
 - **M0** — SSE transport + event protocol ✅ merged
-- **M1** — Session state machine + context injection ✅ implemented (pending maintainer review/validation)
-- **M2** — Native text UI + streaming markdown
+- **M1** — Session state machine + context injection ✅ merged
+- **M2** — Native text UI + streaming markdown ✅ implemented (pending maintainer review/validation, especially the UIKit/View-system interop manual check)
 - **M3** — File upload + audio record/playback
 - **M4** — Dynamic cards + action handler
 - **M5** — Telemetry pipeline

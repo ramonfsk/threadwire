@@ -134,4 +134,51 @@ class ChatSessionTest {
         assertNull(state.lastError)
         assertTrue(state.messages.last().isComplete)
     }
+
+    @Test
+    fun observeStateEmitsCurrentValueImmediatelyThenFollowsUpdates() = runTest {
+        val transport = ScriptedTransport {
+            flow {
+                emit(ChatEvent.TextStart(id = "m1"))
+                emit(ChatEvent.TextEnd(id = "m1"))
+                emit(ChatEvent.Finish)
+            }
+        }
+        val session = ChatSession(transport, testConfig(RecordingContextProvider()), sessionId = "s1", scope = this)
+        val received = mutableListOf<ChatState>()
+        val subscription = session.observeState { received.add(it) }
+        advanceUntilIdle()
+
+        // StateFlow.collect semantics: subscribing emits the current value immediately,
+        // before any new state change - the whole reason observeState is usable from
+        // Swift without a separate "get initial value" call.
+        assertEquals(1, received.size)
+        assertTrue(received.first().messages.isEmpty())
+
+        session.sendMessage("hello")
+        advanceUntilIdle()
+
+        assertTrue(received.size > 1)
+        assertEquals(2, received.last().messages.size)
+        assertEquals(false, received.last().isAwaitingResponse)
+
+        subscription.close()
+    }
+
+    @Test
+    fun observeStateStopsDeliveringAfterSubscriptionClosed() = runTest {
+        val transport = ScriptedTransport { flow { emit(ChatEvent.Finish) } }
+        val session = ChatSession(transport, testConfig(RecordingContextProvider()), sessionId = "s1", scope = this)
+        val received = mutableListOf<ChatState>()
+        val subscription = session.observeState { received.add(it) }
+        advanceUntilIdle()
+
+        subscription.close()
+        val countAtClose = received.size
+
+        session.sendMessage("hello")
+        advanceUntilIdle()
+
+        assertEquals(countAtClose, received.size)
+    }
 }

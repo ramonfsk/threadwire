@@ -1,7 +1,10 @@
 package com.fsk.threadwire.session
 
 import com.fsk.threadwire.transport.ChatTransport
+import com.fsk.threadwire.transport.SseChatTransport
 import com.fsk.threadwire.transport.TransportRequest
+import io.ktor.client.HttpClient
+import io.ktor.client.plugins.sse.SSE
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -98,6 +101,18 @@ class ChatSession(
     }
 
     /**
+     * Callback-based alternative to collecting [state] directly - primarily for Swift
+     * consumers, where collecting a raw `StateFlow`/suspend `Flow` isn't ergonomic
+     * without extra tooling (no SKIE or equivalent is used in this project). Call
+     * [ChatSubscription.close] to stop receiving updates; does not affect [state] or
+     * the session itself.
+     */
+    fun observeState(onChange: (ChatState) -> Unit): ChatSubscription {
+        val job = scope.launch { state.collect { onChange(it) } }
+        return ChatSubscription { job.cancel() }
+    }
+
+    /**
      * `contextPayload` is wrapped, untouched, under the reserved `"context"` key
      * (design doc §7) - `:core` builds this envelope but never reads into its own
      * keys (principle 6). Exact envelope shape beyond that is a minimal, internal
@@ -108,6 +123,41 @@ class ChatSession(
             put("message", JsonPrimitive(message))
             put("context", contextPayload.toJsonObject())
         }.toString()
+    }
+
+    companion object {
+        /**
+         * Convenience factory building a [ChatSession] with a default [SseChatTransport]
+         * over a platform-appropriate [HttpClient]. `core/build.gradle.kts` scopes
+         * exactly one client engine per target (OkHttp on Android, Darwin on iOS), so a
+         * plain `HttpClient { }` call here resolves to the right engine automatically -
+         * no expect/actual needed. Installs [SSE], then hands the engine config to
+         * [ChatConfig.httpClientCustomizer] (design doc §7 - "allows mTLS/pinning")
+         * before finalizing.
+         *
+         * A `companion object` function (not a top-level one) deliberately, so it has a
+         * predictable Kotlin/Native Swift-export shape (`ChatSession.companion.create(...)`)
+         * rather than relying on Kotlin's file-facade naming for top-level functions,
+         * which isn't verified against a real Xcode build in this project.
+         *
+         * Hosts needing full control over transport/DI (tests, custom engines) can still
+         * use the primary constructor directly.
+         *
+         * Two explicit overloads, not one `scope` parameter with a default value:
+         * Kotlin default parameter values don't bridge to Swift/Obj-C (every argument
+         * must be supplied explicitly at the call site), so `ChatSession.companion.create(config:sessionId:)`
+         * would otherwise fail to compile from Swift with "missing argument for parameter 'scope'".
+         */
+        fun create(config: ChatConfig, sessionId: String): ChatSession =
+            create(config, sessionId, CoroutineScope(SupervisorJob() + Dispatchers.Default))
+
+        fun create(config: ChatConfig, sessionId: String, scope: CoroutineScope): ChatSession {
+            val httpClient = HttpClient {
+                install(SSE)
+                config.httpClientCustomizer(this)
+            }
+            return ChatSession(SseChatTransport(httpClient), config, sessionId, scope)
+        }
     }
 }
 

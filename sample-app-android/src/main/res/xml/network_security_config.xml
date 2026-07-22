@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Cleartext HTTP is blocked by default since API 28 - this scopes the exception to
+     the emulator's host-loopback alias only, matching tools/fake-sse-server's plain
+     http:// (M0), rather than allowing cleartext app-wide. -->
+<network-security-config>
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="false">10.0.2.2</domain>
+    </domain-config>
+</network-security-config>

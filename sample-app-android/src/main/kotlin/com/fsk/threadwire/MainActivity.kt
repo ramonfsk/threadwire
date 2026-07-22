@@ -4,21 +4,14 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.safeContentPadding
-import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
+import com.fsk.threadwire.session.ChatConfig
+import com.fsk.threadwire.session.ChatContextProvider
+import com.fsk.threadwire.session.ChatRequest
+import com.fsk.threadwire.ui.ChatScreen
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -26,32 +19,26 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         setContent {
-            App()
-        }
-    }
-}
-
-@Composable
-private fun App() {
-    MaterialTheme {
-        var showContent by remember { mutableStateOf(false) }
-        Column(
-            modifier = Modifier.safeContentPadding().fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            Button(onClick = { showContent = !showContent }) {
-                Text("Click me!")
-            }
-            AnimatedVisibility(showContent) {
-                val greeting = remember { Greeting().greet() }
-                Text("Compose: $greeting")
+            MaterialTheme {
+                ChatScreen(
+                    config = sampleConfig,
+                    sessionId = "sample-session",
+                    modifier = Modifier.safeContentPadding().fillMaxSize(),
+                )
             }
         }
     }
 }
 
-@Preview
-@Composable
-private fun AppAndroidPreview() {
-    App()
-}
+/**
+ * Illustrative config only, not a real BFF integration - `10.0.2.2` is the Android
+ * emulator's alias for the host machine's `localhost`, matching `tools/fake-sse-server`
+ * (M0) listening on port 8080 there. A real integrator supplies their own baseUrl/auth.
+ */
+private val sampleConfig = ChatConfig(
+    baseUrl = "http://10.0.2.2:8080/chat",
+    contextProvider = object : ChatContextProvider {
+        override suspend fun headers(request: ChatRequest): Map<String, String> = emptyMap()
+        override suspend fun contextPayload(request: ChatRequest): Map<String, Any?> = emptyMap()
+    },
+)

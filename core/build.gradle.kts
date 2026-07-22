@@ -1,4 +1,5 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.jetbrains.kotlin.gradle.plugin.mpp.apple.XCFramework
 
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
@@ -7,6 +8,15 @@ plugins {
 }
 
 kotlin {
+    // Produces a real combined .xcframework (not just per-target .framework bundles) at
+    // build/XCFrameworks/<debug|release>/ThreadwireCore.xcframework - the standard KMP
+    // Gradle task this registers is `assembleThreadwireCoreXCFramework` (plus
+    // per-configuration variants). sample-app-ios's existing Run Script embed
+    // (`embedAndSignAppleFrameworkForXcode`) is untouched and keeps working as before;
+    // this XCFramework is specifically what `:ui-ios`'s Package.swift binaryTarget
+    // references, since SPM needs a real .xcframework, not a bare .framework slice.
+    val xcframework = XCFramework("ThreadwireCore")
+
     listOf(
         iosArm64(),
         iosSimulatorArm64()
@@ -14,6 +24,7 @@ kotlin {
         iosTarget.binaries.framework {
             baseName = "ThreadwireCore"
             isStatic = true
+            xcframework.add(this)
         }
     }
 
