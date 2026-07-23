@@ -44,13 +44,18 @@ final class ChatSessionStore: ObservableObject {
         session.cancelCurrentTurn()
     }
 
-    /// Retries the last user message - mirrors ui-android's ErrorBanner retry behavior
-    /// (no dedicated `:core` retry API; UI-layer only, see the M2 plan §5).
+    /// Re-sends the last failed turn's user message in place (M2.5 - `:core`'s
+    /// `retryLastFailedTurn()` now owns this, rather than the old UI-layer pattern of
+    /// re-calling `sendMessage` with the same text, which always appended a second
+    /// bubble). Name kept as-is - `ChatView.swift` already calls this method.
     func retryLastUserMessage() {
-        guard
-            let lastUserMessage = state.messages.last(where: { $0.author == .user }),
-            let textPart = lastUserMessage.parts.first(where: { $0 is MessagePartText }) as? MessagePartText
-        else { return }
-        sendMessage(textPart.text)
+        session.retryLastFailedTurn()
+    }
+
+    /// Explicit "load older messages" pagination call (M2.5) - no-op in `:core` if the
+    /// host supplied no history provider, a fetch is already in flight, or there's
+    /// nothing older left.
+    func loadOlderHistory() {
+        session.loadOlderHistory()
     }
 }

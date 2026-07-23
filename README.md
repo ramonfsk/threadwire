@@ -70,13 +70,13 @@ This is a Kotlin Multiplatform project targeting Android and iOS.
 - [`ui-ios`](./ui-ios) — SwiftUI UI (bubbles, streaming markdown, `ChatView`), a local Swift package consuming `:core`'s XCFramework. Also exposes `ChatViewController` for UIKit apps. iOS 16+ (floor set by the markdown library's own requirement).
 - [`sample-app-android`](./sample-app-android) — Android host app; consumes `:ui-android` only (never `:core` directly), the same way any third-party integrator would.
 - [`sample-app-ios`](./sample-app-ios/sample-app-ios) — iOS host app (Xcode project); once `ui-ios` is added as a local Swift package dependency in Xcode (a manual step — see `AGENTS.md`), consumes `:ui-ios` the same way.
-- [`tools/fake-sse-server`](./tools/fake-sse-server) — a small local Ktor server for manually exercising `SseChatTransport` against a real HTTP connection (scripted event sequence, deliberate mid-stream drop to test `Last-Event-ID` reconnection). Not shipped with `:core`, dev-only.
+- [`tools/fake-sse-server`](./tools/fake-sse-server) — a small local Ktor server for manually exercising `SseChatTransport` against a real HTTP connection. Serves one of several named scenarios per request, selected by keyword match against the sent message text: `happy-path` (default - plain text reply), `reconnect` (card/tool/handoff flow, deliberate mid-stream drop to exercise `Last-Event-ID` reconnection), `error` (in-band `error` event), `handoff` (handoff-only flow), `long` (many small streaming chunks). Not shipped with `:core`, dev-only.
 
 ### Running the apps
 
 - Android app: `./gradlew :sample-app-android:assembleDebug`
 - iOS app: run `./gradlew :core:assembleThreadwireCoreXCFramework` first (produces the XCFramework `ui-ios/Package.swift` references), add `ui-ios` as a local Swift package dependency in Xcode if not already done (File → Add Package Dependencies → Add Local...), then open [`sample-app-ios`](./sample-app-ios) in Xcode and run it from there.
-- Fake SSE server (manual transport/UI testing): `./gradlew :tools:fake-sse-server:run`, then point the sample apps' `ChatConfig.baseUrl` at it (already the default in both sample apps) - or `curl -N -H "Accept: text/event-stream" -X POST http://localhost:8080/chat` to exercise it directly.
+- Fake SSE server (manual transport/UI testing): `./gradlew :tools:fake-sse-server:run`, then point the sample apps' `ChatConfig.baseUrl` at it (already the default in both sample apps). Send a message containing one of the scenario keywords above (e.g. "let's test a long reply") to trigger that scenario, or send anything else for the default `happy-path` reply - or exercise a scenario directly with `curl -N -H "Accept: text/event-stream" -X POST http://localhost:8080/chat -d '{"message":"reconnect please"}'`.
 
 ### Running tests
 

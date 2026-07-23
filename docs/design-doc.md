@@ -349,11 +349,50 @@ This project has had a deliberate gap up to this point: it solves architecture, 
 1. **M0 — Transport:** `ChatTransport` (SSE), multiplatform Ktor Client, `Last-Event-ID` reconnection, event protocol parsing (section 4).
 2. **M1 — Session and context:** `ChatSession` (state machine), `ChatContextProvider`, `ChatConfig`.
 3. **M2 — Native text UI:** bubbles, streaming markdown (iOS via SwiftStreamingMarkdown, Android via mikepenz + incremental contribution).
-4. **M3 — Media:** file upload, native audio record/playback.
-5. **M4 — Cards:** own schema, parser in `commonMain`, native renderers, `ChatActionHandler`.
-6. **M5 — Telemetry:** `ChatTelemetrySink`, background pipeline with backpressure.
-7. **M6 — Handoff:** `WebSocketChatTransport`, handoff events, presence/typing indicators.
-8. **M7 — Sample apps:** `:sample-app-android` / `:sample-app-ios`, published to the app stores as a showcase.
+4. **M2.5 — Chat resilience & history:** manual test scenarios (`tools/fake-sse-server`), SSE reconnection validation, non-duplicating message retry, server-fetched paginated history via `ChatHistoryProvider` (section 15.1). Inserted after M2 was already built; does not renumber the milestones below.
+5. **M2.6 — Design System Adoption:** full replacement of M2's bubbles/banners/input bar/retry UX in both `:ui-android` and `:ui-ios` with a commissioned design (tokens, per-message failed-send treatment, chat-list sidebar, search overlay) — section 15.2. Also inserted without renumbering.
+6. **M3 — Media:** file upload, native audio record/playback.
+7. **M4 — Cards:** a generic, data-driven card-rendering engine (own `:cards-core`/`:cards-android`/`cards-ios` library) — section 15.3 replaces this milestone's earlier one-line placeholder with a concrete, validated scope.
+8. **M5 — Telemetry:** `ChatTelemetrySink`, background pipeline with backpressure.
+9. **M6 — Handoff:** `WebSocketChatTransport`, handoff events, presence/typing indicators.
+10. **M7 — Sample apps:** `:sample-app-android` / `:sample-app-ios`, published to the app stores as a showcase.
+
+### 15.1 M2.5 — Chat resilience & history (detail)
+
+Inserted between M2 and M3 in implementation order only — the "M3 scope"/"M4 scope"/"M5 scope"/"M6 scope" comments already scattered through the codebase still refer to the original M3–M7 numbering above and are not renumbered by this insertion.
+
+- **Manual test scenarios (`tools/fake-sse-server`):** multiple named, keyword-selected scripted scenarios (happy path, in-band error, handoff-only, long multi-chunk stream, plus the existing card/tool/handoff-with-drop scenario, renamed "reconnect") — still dev-only, still not shipped with `:core`.
+- **Reconnection validation:** `SseChatTransport`'s existing `Last-Event-ID` reconnection (M0) needed no `:core` changes — validated by an added session-level test plus the "reconnect" fake-sse-server scenario. A visible "reconnecting..." banner (§14.1 item 6) is deferred as optional/stretch, not required for this milestone, since it needs a new signal path nothing in `:core` exposes yet.
+- **Non-duplicating retry:** a failed turn's user message is now flagged (`ChatMessage.deliveryFailed`) rather than silently indistinguishable from a successful one; `ChatSession.retryLastFailedTurn()` re-sends it without appending a second bubble.
+- **History:** `ChatHistoryProvider` (mirrors `ChatContextProvider`'s shape and philosophy exactly — `:core` never assumes a wire format, the host owns the actual fetch) restores a conversation server-side on session (re)open, with cursor-based "load older" pagination. No local persistence/KV layer, per design principle 6 and this milestone's explicit constraint.
+
+### 15.2 M2.6 — Design System Adoption (detail)
+
+A commissioned design (design tool export, reverse-engineered from a standalone HTML build; Android and iOS are the same design bar font/safe-area/star-icon) replaces M2's bare-Material-3/bare-SwiftUI visual language entirely, on both platforms — not additive, not optional. **Scope is deliberately narrowed to the single-chat surface** (see the deferred list below): the message thread, composer, header chrome, welcome/empty state, and all message/error/streaming states, built pixel-faithfully against the design's extracted style dictionary.
+
+- **Tokens:** colors (`bg`/`surface`/`surfaceAlt`/`text`/`textSecondary`/`textTertiary`/`border`/`bubbleAssistant`/`inputBg`/`code`, light+dark), a 3-tier font scale (small/medium/large), a default accent (`#3B6EA5`) and destructive (`#C24545`) color — hardcoded for this milestone (system light/dark only), not routed through a `ChatUIConfig` that doesn't exist yet (§12). New `ThreadwireColors`/`ThreadwireTypography`/`ThreadwireTheme` files on both platforms.
+- **Bubbles:** asymmetric "tail" corners (`bubbleUser` 18/18/4/18, `bubbleAssistant` 18/18/18/4), assistant bubble carries a 1px border, 10×14 padding — transcribed exactly from the design.
+- **Composer:** a single rounded pill (`inputRow`) holding attach + text field + one trailing control (send/stop/mic 32px circles) — not separate elements.
+- **§14.2 resolution:** the design has no author labels at all (position/color only). To preserve §14.2's non-color-alone guarantee, user bubbles stay unlabeled (matches the design) but AI/Agent/System messages keep a minimal small-type author label.
+- **Per-message failed-send:** replaces the session-level `ErrorBanner`/`ErrorBannerView` for send failures with a small "Failed to send" + inline retry icon directly under the specific failed bubble (`ChatMessage.deliveryFailed`, already modeled by M2.5).
+- **History-load-failure:** a slim inline "Couldn't load earlier messages. Retry" treatment, reading `ChatState.historyError` (already modeled by M2.5).
+- **Streaming / welcome:** animated typing dots and a text-only welcome/empty state ("How can I help you today?" + optional host-supplied suggestion chips). The design's decorative assistant avatar was intentionally dropped — for an LLM, a persona avatar reads as misleading.
+- **Scroll behaviour (market-standard, iMessage/WhatsApp-style):** opens on the most recent message; auto-follows the streaming tail *smoothly* only while the user is parked at the bottom (never yanks a reader who scrolled up); a 36px circular jump-to-bottom button appears once the user has scrolled up far enough that the last message is no longer readable, and tapping it smoothly scrolls to the true bottom and re-arms following. Android uses a `reverseLayout` LazyColumn (item 0 at the bottom, list growing upward) - the standard chat pattern: the newest message stays pinned to the bottom natively and a streaming reply grows upward while its bottom stays glued to the viewport, so there's no fragile scroll math (a forward layout mis-fired on a single screen-tall message and stuck at its top). "At the bottom" is `!canScrollBackward`; the jump button shows whenever the user is scrolled off it. iOS keeps a forward `ScrollView`, following via `ScrollViewReader.scrollTo(anchor: .bottom)` (which reaches the true content bottom) and reading scroll position via `onScrollGeometryChange` (iOS 18).
+- **Timestamps:** each bubble shows a locale-aware send time from a new client-clock `ChatMessage.timestampMillis` (`0` = unknown, e.g. history messages with no server time — no timestamp shown). Stamped at the impure boundary (`ChatSession.sendMessage` for the user turn, the reducer via an injected `nowMillis` for assistant/agent turns, keeping the reducer pure/testable). On the assistant bubble the time sits inline as the trailing element of the reaction row.
+- **Icons:** the design's line icons are rendered as **native vector paths** built from the design's own SVG path data (extracted from the export) — `ImageVector` on Android, a `Path`/`Canvas` renderer on iOS fed pre-flattened absolute move/line/cubic commands (arcs converted to Béziers once, offline) so iOS needs no runtime SVG engine. Identical glyphs on both platforms; tinted per usage. Manual cross-language path-data sync accepted as a risk (same posture as the tokens).
+- **Header chrome:** the design's menu/title/search/close bar, with menu/search/close surfaced as **host navigation hooks** (`onMenuClick`/`onSearchClick`/`onClose`) rather than built-in behavior.
+
+**Deferred out of M2.6** (design shows them, but they depend on features `:core` doesn't have yet — future milestones, not regressions): the built-in chat-list sidebar, in-chat search overlay, and `ChatListProvider` (a navigation/multi-session milestone); attachments + audio record/playback (M3); the media viewer, splash, auth/session-error full screens, header rename/delete/clear menu, and toasts (as-needed later); cards (M4).
+
+### 15.3 M4 — Cards (detail, redefined)
+
+Originally a one-line placeholder ("own schema, parser in `commonMain`, native renderers, `ChatActionHandler`"). Now concrete: a **generic, data-driven rendering engine**, not a fixed set of dedicated card types — deliberately scoped down from real Adaptive Cards (adaptivecards.microsoft.com), reusing its actual element vocabulary rather than inventing a competing one.
+
+- **Module structure:** new, separate `:cards-core` (KMP schema/engine, `api(projects.core)`), `:cards-android` (Compose renderers), `cards-ios/` (SwiftUI Swift package) - a standalone library, not folded into `:ui-android`/`ui-ios`, so card rendering is usable outside a chat context too.
+- **Element vocabulary:** `TextBlock`, `Image`, `Media`, `Container`, `ColumnSet`/`Column`, `FactSet`, `ActionSet`, `Input.Text`/`Input.ChoiceSet`/`Input.Toggle`/`Input.Date`/`Input.Time`/`Input.Rating`, plus two custom additions real AC doesn't cleanly cover for chat (`Carousel`, `Stepper`). Validated by composing all 17 illustrative card layouts from the commissioned design (confirm/summary/carousel/rating/choices/form/location/checklist/datetime/progress/payment/contact/poll/weather/ordertracking/video) purely as data - zero new Kotlin/Swift code per new card design a BFF author invents later.
+- **`:core` stays untouched:** `MessagePart.Card`'s `body: JsonObject?` stays opaque; `:cards-core` is what interprets it, matching the existing "never interpret card/tool payloads" principle.
+- **Interaction round-trip:** most actions synthesize a chat message via the existing `ChatSession.sendMessage` (no new `:core` API needed) - a per-action `mode: notify | hostAction` flag (data-driven, not a hardcoded type list) instead routes genuinely sensitive actions (payment, saving a contact) through a new `CardActionHandler`, a cards-scoped sibling of §9's existing `ChatActionHandler` pattern, not a replacement for it.
+- **Wire schema:** documented separately in `docs/cards-wire-schema.md`, marked as this project's own proposal pending real-BFF validation - §8 below is updated to reflect the vocabulary instead of its earlier generic sketch.
 
 ## 16. Risks and open questions
 
