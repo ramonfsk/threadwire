@@ -24,4 +24,17 @@ data class ChatState(
     val isAwaitingResponse: Boolean = false,
     val lastError: ChatErrorInfo? = null,
     val lastHandoffEndReason: String? = null,
+    /** Position-independent id source for live messages (M2.5) - decoupled from
+     *  `messages.size` specifically so prepending a history page never shifts or
+     *  collides with an already-assigned [ChatMessage.localId]. */
+    val nextLocalMessageSeq: Int = 0,
+    val isLoadingHistory: Boolean = false,
+    /** Defaults false, not true: a session with no [ChatConfig.historyProvider] never
+     *  runs a history fetch, so this must stay false forever for it - only a session
+     *  that actually has a provider ever flips this via [ChatStateReducer.reduceHistoryPageLoaded]. */
+    val hasMoreHistory: Boolean = false,
+    val historyCursor: String? = null,
+    /** Kept separate from [lastError] - a failed history fetch shouldn't surface
+     *  through the turn-retry error banner. */
+    val historyError: ChatErrorInfo? = null,
 )

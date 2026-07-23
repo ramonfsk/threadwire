@@ -142,6 +142,124 @@ class ChatStateReducerTest {
         assertEquals(false, state.isAwaitingResponse)
     }
 
+    private fun userMessage(text: String, deliveryFailed: Boolean = false) = ChatMessage(
+        localId = "live_0",
+        author = MessageAuthor.USER,
+        parts = listOf(MessagePart.Text(id = "user_0", text = text, isComplete = true)),
+        isComplete = true,
+        deliveryFailed = deliveryFailed,
+    )
+
+    @Test
+    fun transportErrorFlagsTheTriggeringUserMessageAsFailed() {
+        val withUserMessage = ChatState(messages = listOf(userMessage("hello")))
+        val mid = ChatStateReducer.reduce(withUserMessage, ChatEvent.TextStart(id = "msg_1"))
+        val state = ChatStateReducer.reduceTransportError(mid, "connection reset")
+
+        assertEquals(true, state.messages.first().deliveryFailed)
+    }
+
+    @Test
+    fun inBandErrorFlagsTheTriggeringUserMessageAsFailed() {
+        val withUserMessage = ChatState(messages = listOf(userMessage("hello")))
+        val mid = ChatStateReducer.reduce(withUserMessage, ChatEvent.TextStart(id = "msg_1"))
+        val state = ChatStateReducer.reduce(mid, ChatEvent.Error(code = "boom", message = "oops"))
+
+        assertEquals(true, state.messages.first().deliveryFailed)
+    }
+
+    @Test
+    fun cancelledDoesNotFlagTheUserMessageAsFailed() {
+        val withUserMessage = ChatState(messages = listOf(userMessage("hello")))
+        val mid = ChatStateReducer.reduce(withUserMessage, ChatEvent.TextStart(id = "msg_1"))
+        val state = ChatStateReducer.reduceCancelled(mid)
+
+        assertEquals(false, state.messages.first().deliveryFailed)
+    }
+
+    @Test
+    fun retryStartedClearsFailedFlagAndErrorAndReArmsAwaitingResponse() {
+        val failedState = ChatState(
+            messages = listOf(userMessage("hello", deliveryFailed = true)),
+            lastError = ChatErrorInfo(code = null, message = "boom", isTransportLevel = true),
+        )
+
+        val state = ChatStateReducer.reduceRetryStarted(failedState)
+
+        assertEquals(false, state.messages.single().deliveryFailed)
+        assertNull(state.lastError)
+        assertTrue(state.isAwaitingResponse)
+    }
+
+    @Test
+    fun retryStartedIsNoOpWhenNothingIsFlaggedFailed() {
+        val state = ChatState(messages = listOf(userMessage("hello")))
+
+        val result = ChatStateReducer.reduceRetryStarted(state)
+
+        assertEquals(state, result)
+    }
+
+    @Test
+    fun liveMessageIdsAreCounterBasedNotPositionDerived() {
+        val state = reduceAll(
+            listOf(
+                ChatEvent.TextStart(id = "m1"),
+                ChatEvent.TextEnd(id = "m1"),
+                ChatEvent.Finish,
+            ),
+        )
+
+        assertEquals("live_0", state.messages.single().localId)
+        assertEquals(1, state.nextLocalMessageSeq)
+    }
+
+    @Test
+    fun historyPageLoadedPrependsDeDupesAndUpdatesCursor() {
+        val existing = ChatState(messages = listOf(userMessage("newest")))
+        val page = ChatHistoryPage(
+            messages = listOf(
+                HistoryMessage(
+                    remoteId = "remote_1",
+                    author = MessageAuthor.AI,
+                    parts = listOf(MessagePart.Text(id = "t1", text = "older reply", isComplete = true)),
+                ),
+            ),
+            nextCursor = "cursor_2",
+        )
+
+        val state = ChatStateReducer.reduceHistoryPageLoaded(existing, page)
+
+        assertEquals(2, state.messages.size)
+        assertEquals("remote_1", state.messages.first().localId)
+        assertEquals("live_0", state.messages.last().localId)
+        assertEquals("cursor_2", state.historyCursor)
+        assertTrue(state.hasMoreHistory)
+        assertEquals(false, state.isLoadingHistory)
+    }
+
+    @Test
+    fun historyPageLoadedDeDupesAgainstAlreadyLoadedRemoteIds() {
+        val existing = ChatState(
+            messages = listOf(
+                ChatMessage(localId = "remote_1", author = MessageAuthor.AI, parts = emptyList(), isComplete = true),
+            ),
+        )
+        val page = ChatHistoryPage(
+            messages = listOf(
+                HistoryMessage(remoteId = "remote_1", author = MessageAuthor.AI, parts = emptyList()),
+                HistoryMessage(remoteId = "remote_0", author = MessageAuthor.AI, parts = emptyList()),
+            ),
+            nextCursor = null,
+        )
+
+        val state = ChatStateReducer.reduceHistoryPageLoaded(existing, page)
+
+        assertEquals(2, state.messages.size)
+        assertEquals("remote_0", state.messages.first().localId)
+        assertEquals(false, state.hasMoreHistory)
+    }
+
     @Test
     fun fullHandoffCycleFlipsAuthorshipAndReturnsToAiActive() {
         var state = ChatState()
