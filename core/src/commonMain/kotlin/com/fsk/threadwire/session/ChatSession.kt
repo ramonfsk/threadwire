@@ -22,6 +22,7 @@ import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
+import kotlin.time.Clock
 
 /**
  * A single chat session against the integrator's BFF - design doc §5:
@@ -45,6 +46,16 @@ class ChatSession(
 
     private var currentTurn: Job? = null
 
+    init {
+        // Server-fetched history only, no local persistence (M2.5, resolved scope
+        // decision). Auto-loads the most recent page on construction so a reopened
+        // session isn't empty; further pages are explicit via [loadOlderHistory].
+        config.historyProvider?.let { provider ->
+            _state.update { it.copy(isLoadingHistory = true) }
+            scope.launch { loadHistoryPage(provider, cursor = null) }
+        }
+    }
+
     /**
      * Sends a text-only user turn (attachments/audio are M3 scope, not modeled here).
      * A no-op while a turn is already in flight (provisional default - no doc
@@ -55,18 +66,44 @@ class ChatSession(
 
         _state.update { state ->
             val userMessage = ChatMessage(
-                localId = "msg_${state.messages.size}",
+                localId = "live_${state.nextLocalMessageSeq}",
                 author = MessageAuthor.USER,
-                parts = listOf(MessagePart.Text(id = "user_${state.messages.size}", text = text, isComplete = true)),
+                parts = listOf(MessagePart.Text(id = "user_${state.nextLocalMessageSeq}", text = text, isComplete = true)),
                 isComplete = true,
+                timestampMillis = Clock.System.now().toEpochMilliseconds(),
             )
-            state.copy(messages = state.messages + userMessage, isAwaitingResponse = true)
+            state.copy(
+                messages = state.messages + userMessage,
+                isAwaitingResponse = true,
+                nextLocalMessageSeq = state.nextLocalMessageSeq + 1,
+                // A stale error from a prior failed turn shouldn't linger once the host
+                // moves on to a genuinely new message (as opposed to a retry).
+                lastError = null,
+            )
         }
+        beginTurn(text)
+    }
 
+    /**
+     * Re-sends the last failed turn's user message in place, instead of the UI-layer
+     * pattern (both sample UIs used, pre-M2.5) of re-calling [sendMessage] with the same
+     * text - which always appended a second bubble. No-op if nothing is currently
+     * flagged failed, or a turn is already in flight. Zero parameters, so it needs no
+     * Swift-facing overload.
+     */
+    fun retryLastFailedTurn() {
+        if (_state.value.isAwaitingResponse) return
+        val failed = _state.value.messages.lastOrNull { it.author == MessageAuthor.USER && it.deliveryFailed } ?: return
+        val text = failed.parts.filterIsInstance<MessagePart.Text>().firstOrNull()?.text ?: return
+        _state.update { ChatStateReducer.reduceRetryStarted(it) }
+        beginTurn(text)
+    }
+
+    private fun beginTurn(text: String) {
         currentTurn = scope.launch {
             try {
                 // Called fresh on every request (design doc §7: "covers cases like token
-                // refresh") - never cached across sendMessage calls.
+                // refresh") - never cached across calls.
                 val contextRequest = ChatRequest(sessionId = sessionId, message = text)
                 val headers = config.contextProvider.headers(contextRequest)
                 val contextPayload = config.contextProvider.contextPayload(contextRequest)
@@ -77,7 +114,7 @@ class ChatSession(
                 )
 
                 transport.streamEvents(transportRequest).collect { event ->
-                    _state.update { ChatStateReducer.reduce(it, event) }
+                    _state.update { ChatStateReducer.reduce(it, event, Clock.System.now().toEpochMilliseconds()) }
                 }
             } catch (e: CancellationException) {
                 throw e
@@ -93,6 +130,32 @@ class ChatSession(
         currentTurn = null
         turn.cancel()
         _state.update { ChatStateReducer.reduceCancelled(it) }
+    }
+
+    /**
+     * Explicit "load older messages" pagination call (M2.5). No-op if the host supplied
+     * no [ChatHistoryProvider], a fetch is already in flight, or [ChatState.hasMoreHistory]
+     * is already false. Zero parameters, so it needs no Swift-facing overload.
+     */
+    fun loadOlderHistory() {
+        val provider = config.historyProvider ?: return
+        val snapshot = _state.value
+        if (snapshot.isLoadingHistory || !snapshot.hasMoreHistory) return
+        _state.update { it.copy(isLoadingHistory = true) }
+        scope.launch { loadHistoryPage(provider, cursor = snapshot.historyCursor) }
+    }
+
+    private suspend fun loadHistoryPage(provider: ChatHistoryProvider, cursor: String?) {
+        try {
+            val page = provider.fetchHistory(ChatHistoryRequest(sessionId, cursor))
+            _state.update { ChatStateReducer.reduceHistoryPageLoaded(it, page) }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            _state.update {
+                it.copy(isLoadingHistory = false, historyError = ChatErrorInfo(code = null, message = e.message, isTransportLevel = true))
+            }
+        }
     }
 
     /** Cancels the whole session. Idempotent. Hosts must call this on teardown. */
