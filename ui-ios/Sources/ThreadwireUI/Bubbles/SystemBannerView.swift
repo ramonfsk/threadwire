@@ -7,10 +7,13 @@ import ThreadwireCore
 struct SystemBannerView: View {
     let message: ChatMessage
 
+    @Environment(\.threadwireColors) private var colors
+    @Environment(\.threadwireTypography) private var typography
+
     var body: some View {
         Text(message.accessibleSummary())
-            .font(.caption)
-            .foregroundColor(.secondary)
+            .font(typography.meta)
+            .foregroundColor(colors.textSecondary)
             .frame(maxWidth: .infinity)
             .multilineTextAlignment(.center)
             .padding(.vertical, 8)

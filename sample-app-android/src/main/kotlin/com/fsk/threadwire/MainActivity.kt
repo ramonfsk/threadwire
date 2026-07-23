@@ -5,8 +5,6 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.safeContentPadding
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.Modifier
 import com.fsk.threadwire.session.ChatConfig
 import com.fsk.threadwire.session.ChatContextProvider
@@ -19,13 +17,16 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         setContent {
-            MaterialTheme {
-                ChatScreen(
-                    config = sampleConfig,
-                    sessionId = "sample-session",
-                    modifier = Modifier.safeContentPadding().fillMaxSize(),
-                )
-            }
+            // ChatScreen is edge-to-edge: it fills the whole window (background runs
+            // under the status/nav bars) and applies the safe-area insets internally
+            // (header below the status bar, composer above the nav bar/keyboard). So
+            // the host just fills the window - no outer safeContentPadding, which would
+            // inset the whole surface and leave a margin of window background around it.
+            ChatScreen(
+                config = sampleConfig,
+                sessionId = "sample-session",
+                modifier = Modifier.fillMaxSize(),
+            )
         }
     }
 }

@@ -3,13 +3,21 @@ import ThreadwireCore
 import SwiftStreamingMarkdown
 
 /// Renders a single `MessagePart`. Non-text parts get a minimal, visually inert
-/// placeholder - real card/tool-call UI is M4/M3 scope, not this milestone.
+/// placeholder - real card rendering is the M-Cards milestone's job (a separate
+/// library), not this one.
+///
+/// [textColor] defaults to the design tokens' body text color, but the user bubble
+/// (accent-filled, per M2.6) passes white explicitly. Applied via `.foregroundColor`
+/// on `StreamedMarkdownView` - not verified against a real build that the library's
+/// internal `Text` views actually inherit it (flagging per this project's established
+/// pattern for unverified Kotlin/Swift-adjacent assumptions).
 struct MessagePartView: View {
     let part: MessagePart
+    var textColor: Color = .primary
 
     var body: some View {
         if let text = part as? MessagePartText {
-            TextPartView(part: text)
+            TextPartView(part: text, textColor: textColor)
         } else if part is MessagePartToolCall {
             InertPlaceholderChip(label: "Tool call")
         } else if part is MessagePartCard {
@@ -22,36 +30,23 @@ struct MessagePartView: View {
     }
 }
 
-/// Bridges one `MessagePartText`'s accumulated string (already a full snapshot on
-/// every update, per `:core`'s reducer - never just a delta) into `SwiftStreamingMarkdown`'s
-/// `AsyncStream`-based streaming source.
-private final class TextPartMarkdownSource: ObservableObject, StreamedMarkdownSource {
-    let text: AsyncStream<String>
-    private let continuation: AsyncStream<String>.Continuation
-
-    init() {
-        var continuationRef: AsyncStream<String>.Continuation!
-        self.text = AsyncStream { continuation in
-            continuationRef = continuation
-        }
-        self.continuation = continuationRef
-    }
-
-    func update(_ newText: String) {
-        continuation.yield(newText)
-    }
-}
-
 private struct TextPartView: View {
     let part: MessagePartText
-    @StateObject private var source = TextPartMarkdownSource()
+    let textColor: Color
 
     var body: some View {
-        StreamedMarkdownView(source: source)
-            .onAppear { source.update(part.text) }
-            .onChange(of: part.text) { newValue in
-                source.update(newValue)
-            }
+        // MarkdownView (driven by `.task(id: text)`), not StreamedMarkdownView. `:core`
+        // already emits a full text snapshot on every update, so re-parsing the current
+        // snapshot renders progressively as the reply streams - the same snapshot-by-
+        // snapshot look, since the design's config doesn't animate per-character anyway.
+        // The reason for the switch is correctness under LazyVStack recycling: scrolling a
+        // streaming bubble off-screen ran StreamedMarkdownController's `.onDisappear`,
+        // cancelling its consuming task, and its single-shot AsyncStream cannot be
+        // re-iterated when `.task` restarts on reappear - so the text froze mid-stream
+        // ("ficou incompleta"). MarkdownView holds no stream: it just re-parses whatever
+        // `part.text` currently is, every time it appears or grows. Font/color come from
+        // the design-aligned config (not the library's 17pt default).
+        MarkdownView(text: part.text, config: threadwireMarkdownConfig(textColor: textColor))
     }
 }
 

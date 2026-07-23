@@ -8,6 +8,9 @@ import ThreadwireCore
 struct PhaseBannerView: View {
     let phase: SessionPhase
 
+    @Environment(\.threadwireColors) private var colors
+    @Environment(\.threadwireTypography) private var typography
+
     private var text: String? {
         if phase is SessionPhaseAiActive {
             return nil
@@ -20,14 +23,22 @@ struct PhaseBannerView: View {
     }
 
     var body: some View {
-        if let text {
-            Text(text)
-                .font(.caption)
-                .multilineTextAlignment(.center)
-                .frame(maxWidth: .infinity)
-                .padding(8)
-                .background(Color.yellow.opacity(0.2))
-                .accessibilityLabel(text)
+        Group {
+            if let text {
+                Text(text)
+                    .font(typography.meta)
+                    .foregroundColor(colors.textSecondary)
+                    .multilineTextAlignment(.center)
+                    .frame(maxWidth: .infinity)
+                    .padding(8)
+                    .background(colors.surfaceAlt)
+                    .accessibilityLabel(text)
+                    .transition(.opacity)
+            }
         }
+        // Keyed off `text` (plain String?, trivially Equatable), not `phase` directly -
+        // SessionPhase is a Kotlin/Native-bridged type with no guaranteed Equatable
+        // conformance for SwiftUI's animation(value:).
+        .animation(.easeInOut, value: text)
     }
 }
